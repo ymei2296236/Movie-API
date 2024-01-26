@@ -1,27 +1,106 @@
-const http = require("http");
+// const http = require("http");
+
+// express est equivalence de http, mais plus facile
+const express = require("express");
 const dotenv = require("dotenv");
 const fs = require("fs");
+const path = require("path");
+const mustacheExpress = require("mustache-express");
 
-// au début du fichier
+// au début du fichier - configuration
 dotenv.config();
 
-const server = http.createServer((request, response)=>{
-    if(request.method == "GET" && request.url == "/") 
+/**
+ * Version longue
+ */
+// const server = http.createServer((request, response)=>{
+    //     if(request.method == "GET" && request.url == "/") 
+    //     {
+        //         const file = fs.readFileSync('./public/index.html', 'utf-8');
+        //         response.setHeader("Content-Type", "text-html");
+        //         response.statusCode = 200;
+        //         response.end(file);
+        //     }
+        //     else
+        //     {
+            //         const file = fs.readFileSync('./public/404.html', 'utf-8');
+            //         response.setHeader("Content-Type", "text-html");
+            //         response.statusCode = 404;
+            //         response.end(file);
+            //     }
+            // })
+
+/**
+ * Version courte
+ */
+            
+const server = express();
+
+// Définir le path du dossir de views
+server.set("views", path.join(__dirname, "views"));
+server.set("view engine", "mustache");
+server.engine("mustache", mustacheExpress());
+
+// Middleware 
+// Doit être entre la configuration et les routes / points d'accès
+// get tous les fichiers statiques dans le dossier public (donne accès à tout ce qui est dans le dossier public pour protéger le reste du projet)
+server.use(express.static(path.join(__dirname, "public")));
+
+// Points d'accès
+server.get("/donnees", (req, res)=>
+{
+    // const test = {email: "test@gmail.com"}
+
+    // Ceci sera remplacé par un fetch ou un appel à la base de données
+    const donnees = require("./data/donneesTest");
+    res.statusCode = 200;
+    res.json(donnees);
+
+})
+
+/**
+ * @method GET
+ * @param id
+ * Permet d'accéder à un utilisateur
+ */
+// : implique que c'est un paramètre
+server.get("/donnees/:id", (req, res)=>
+{
+    // console.log(req.params.id);
+    const donnees = require("./data/donneesTest");
+    // find retourne 
+    const utilisateur = donnees.find((element)=>
     {
-        const file = fs.readFileSync('./public/index.html', 'utf-8');
-        response.setHeader("Content-Type", "text-html");
-        response.statusCode = 200;
-        response.end(file);
+        return element.id == req.params.id;
+    })
+
+    if(utilisateur)
+    {
+        res.statusCode = 200;
+        res.json(utilisateur);
     }
     else
     {
-        const file = fs.readFileSync('./public/404.html', 'utf-8');
-        response.setHeader("Content-Type", "text-html");
-        response.statusCode = 404;
-        response.end(file);
+        res.statusCode = 404;
+        res.json({ message: "Utilisateur non trouvé. "});
     }
+    console.log(req);
+    res.send(req.params.id);
+});
+
+// Doit être le dernier
+// Gestion page 404 - requête non trouvée
+
+server.use((req, res)=>
+{
+    res.statusCode = 404;
+    // const file = fs.readFileSync('./public/404.html', 'utf-8');
+    // res.end(file);
+    res.render("404", {url: req.url});
 })
 
-server.listen(process.env.PORT, ()=>{
+// Message de confirmation lors du démarrage du serveur
+server.listen(process.env.PORT, ()=>
+{
     console.log("Le serveur a démarré.");
 });
