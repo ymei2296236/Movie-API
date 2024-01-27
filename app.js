@@ -63,12 +63,12 @@ server.get("/donnees", (req, res)=>
  * @param id
  * Permet d'accéder à un utilisateur
  */
-// : implique que c'est un paramètre
+// : implique que c'est un paramètre, ce qui suive le : est la cle de l'array 'params'
 server.get("/donnees/:id", (req, res)=>
 {
     // console.log(req.params.id);
     const donnees = require("./data/donneesTest");
-    // find retourne 
+    // find retourne l'element utilisateur
     const utilisateur = donnees.find((element)=>
     {
         return element.id == req.params.id;
@@ -94,8 +94,7 @@ server.get("/donnees/:id", (req, res)=>
 server.use((req, res)=>
 {
     res.statusCode = 404;
-    // const file = fs.readFileSync('./public/404.html', 'utf-8');
-    // res.end(file);
+
     res.render("404", {url: req.url});
 })
 
