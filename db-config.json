@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "cadriel-front",
+  "private_key_id": "1dd6c6ec5ea83149fa67c5ce6352c954f315ca3a",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCsBr/AQMt0GTNL\nOO7QhKCjLZ5H9nNiaUM0YNegZK3F36wsHvoW3cfsJmXCae0YEo3wyvmdlqNoQPO3\nIEVRW92F4Z2E4Gre2BB7Ff9AIJzgkbNmKezSkxlMQ6treDsEQkCOUIk3jUNvawXy\nXecvhRa4ww6b9k1baBE7MxkosN5kbheQdQ7MPUqEt9IAT9zmCpZf2Vy+tUz2xEFv\nwZqZWx4v1H6tP6NqaiQhu7Uhagux2AMG9bMvrwV0jMIvEpW/O1ltchzXm7OzlI8k\nxvtTIV434zrKKjCgjAroNrtSGoqTz5sC0qU3QDq/+fY74EHbwDGJ1mB8Kq6H445y\nvqofMLoRAgMBAAECggEAUAtR5OShZpOlRO6oXLkhv9vlpul7lgKRxUj8fELsgsKJ\na/w79TDcKjtRpS1Bp65WgoEHtfaWcVerr32iE3HR+U5aS65au/dAb+1z2ER0ip/x\nIGwIqJDOuChSlo6as2gafr3lo0YlZy4e1cAw5vEf+fe1EAgCxbH+NpQXtFHcIVE/\nXhhzYK/TumMDHirDYTdlns3aR4xks8ICLczn+cl5ExTvUqs9FPcVEynbNjqU90L2\nbcEXzO7M36uR9iVxTerXp+z4RM4ohEx0sz5PbWWW1OboTjHKj1BD7pns5kemRW/k\nthZH4cEjSawFAuXLhQDiDDgPc3nKVadl3hyPNzluswKBgQDYXSs8+e645PvMOTBn\nF8uTGFXGMA/HwoDJA9JczAxp/3dDSEAEAnhcq4gCFO0JhruEBTpjjD7TZOwYFjsF\nAHhdUVKR+e0Ck72vPmJD5LsF9EasEi1A4iwfRVEqwXrVq8TFO7zIjGKqL0vfaSre\n0784nOmUJrGQ4bhvre6U3kTxswKBgQDLikdGsvq6qB53SvzX2s6PPhlrrCL337Dl\nHe6dGZN31k2Sb8+K665RIw8SwTiKsVSaKrUQlW0dwP8oLurabcqDs/QOEHBcX5p9\nXMzMyly45PKxNE7huSNAksrOR1tA9oOLfrzb4dkcX0XsSVoVgFeVK+t6ju0ZEfMH\nc6SBmcjbKwKBgE/dPDuaygqHw4YjygET4HogbnDkhr6mxiDs/zZvv1lVCjHUtoSE\nYOdcDa0vCjwM9qSJxX6/YuVnCFrvwcNb5BIWFZN6nIjp/gd00JLdGEffXkLfxsJ/\neeflD0vn9S5v5AclwM6KO1U0dh42VLPBl4EPMo0UJ1EicJEQs9NRpENPAoGALRLN\nH/Hopkcun/pCLcbtsTjuRjLTd5LYyJQtUCrmxkX13bTXAAubCaq63stdKxGEC7Pj\nbu24QTuJBawGJCLmEu5Z4HdxenNNce+IBt3VVLiWqflMcp4eGWGoea/BnIw6qzyA\ntCy6eJb8lAvWYCaQvp8AQZ6/EKsx53eLeYvFuAsCgYEAtlNMKc7oR7Wzl4mQDKph\nM7AZn3qVSo8mlhw+Pqkqc2EB4ZdRqSqQh+hp9Jl4ANaZadX46mIJhxR7PcQS4Q5C\ngCrdCny1nrU96ZUjtj8DA1IKPRs73T0PSieUiyVLtLODd61v0NcxhsIbykWF+RBa\n1YSDVRWqOd2Bgt28aDGuLCI=\n-----END PRIVATE KEY-----\n",
+  "client_email": "firebase-adminsdk-kwrqd@cadriel-front.iam.gserviceaccount.com",
+  "client_id": "100113022040667621925",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-kwrqd%40cadriel-front.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}
