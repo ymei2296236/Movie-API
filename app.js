@@ -55,9 +55,9 @@ server.get("/donnees", async (req, res)=>
 
     // Ceci sera remplacé par un fetch ou un appel à la base de données
     // const donnees = require("./data/donneesTest");
-    const direction = req.query["order-direction"];
+    const direction = req.query["order-direction"] || 'asc';
     // Ne peut pas enchaîner une clé avec tiret, pas exemple : "req.query.order-direction"
-    const limit = +req.query.limit;
+    const limit = +req.query.limit || 1000 ;
     // La signe plus convertir à un nombre 
 
     const donneesRef = await db.collection("test").orderBy("user", direction).limit(limit).get();
