@@ -167,7 +167,7 @@ server.post("/donnees/initialiser", (req, res)=>
 /**
  * @method PUT
  */
-server.put('donnees/:id', async (req, res)=>
+server.put('/donnees/:id', async (req, res)=>
 {
    try{ 
         const id = req.params.id;
