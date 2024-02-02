@@ -167,16 +167,16 @@ server.post("/donnees/initialiser", (req, res)=>
 /**
  * @method PUT
  */
-server.put('donnees/:id', async (req, res)=>
+server.put('/donnees/:id', async (req, res)=>
 {
    try{ 
         const id = req.params.id;
-
+    console.log(id);
         const donneeModifiees = req.body;
 
         //Validation ici
 
-        await db.connection('test').doc(id).update(donneeModifiees);
+        await db.collection('test').doc(id).update(donneeModifiees);
 
         res.statusCode = 200;
         res.json({message: "La donnée a été modifée."});
