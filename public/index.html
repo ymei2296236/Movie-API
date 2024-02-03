@@ -4,9 +4,32 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="assets/css/styles.css">
-    <title>Document</title>
+    <title>API Films</title>
 </head>
 <body>
-    <h1>Page index 2</h1>
+    <h1>API Films</h1>
+    <h2>Routes publiques</h2>
+    <section>
+        <div>
+            <h3>Films</h3>
+            <p><strong>GET /api/films</strong> : </p>
+            <p>Retourne la liste de tous les films. Vous pouvez trier les films par année, par titre et par réalisateur de façon ascendante ou descendante à l'aide de paramèetres dans l'URL. Par exemple : /api/films?tri=annee&ordre=asc</p>
+            <p><strong>GET /api/films/:id</strong> : </p>
+            <p>Retourne le film ayant l'identifiant :id</p>
+            <p><strong>POST /api/films</strong> : </p>
+            <p>Ajoute un nouveau film à la liste de films. Le corps de la requête doit contenir les informations du film à ajouter. Le film doit être ajouté à la base de données et l'identifiant du film doit être retourné.</p>
+            <p><strong>PUT /api/films/:id</strong> : </p>
+            <p>Modifier le film ayant l'identifiant :id. Le corps de la requête doit contenir les informations du films à modifier. Le film doit être modifié dans la base de données.</p>
+            <p><strong>DELETE /api/films/:id</strong> : </p>
+            <p>Supprime le film ayant l'identifiant :id de la base de données.</p>
+        </div>
+        <div>
+            <h3>Utilisateurs</h3>
+            <p><strong>POST /api/utilisateurs/inscription</strong> : </p>
+            <p>Ajoute un nouvel utilisateur à la liste des utilisateurs. Le corps de la requête doit contenir les informations de l'utilisateur à ajouter. Le mot de passe n'a pas besoin d'être encrypté avant d'être ajouté à la base de données. L'identifiant de l'utilisateur doit être retourné. Assurez-vous de ne pas créer deux utilisateurs aec le même courriel. Retournez un false avec un messge d'erreur dans ce cas précis.</p>
+            <p><strong>POST /api/utilisateurs/connexion</strong> : </p>
+            <p>Connecte un utilisateur. Le corps de la requête doit contenir les informations de l'utilisateur à connecter. Le mot de passe doit être comparé avec celui dans la base de données. Si le mot de passe est valide, votre API retournera true sinon elle retournera false avec un message d'erreur approprié.</p>
+        </div>
+    </section>
 </body>
 </html>

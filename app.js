@@ -1,41 +1,13 @@
-// const http = require("http");
-
-// express est equivalence de http, mais plus facile
 const express = require("express");
 const dotenv = require("dotenv");
-const fs = require("fs");
 const path = require("path");
 const mustacheExpress = require("mustache-express");
 const db = require("./config/db.js");
 const { ServerResponse } = require("http");
 
-// au début du fichier - configuration
-dotenv.config();
-
 /**
- * Version longue
- */
-// const server = http.createServer((request, response)=>{
-    //     if(request.method == "GET" && request.url == "/") 
-    //     {
-        //         const file = fs.readFileSync('./public/index.html', 'utf-8');
-        //         response.setHeader("Content-Type", "text-html");
-        //         response.statusCode = 200;
-        //         response.end(file);
-        //     }
-        //     else
-        //     {
-            //         const file = fs.readFileSync('./public/404.html', 'utf-8');
-            //         response.setHeader("Content-Type", "text-html");
-            //         response.statusCode = 404;
-            //         response.end(file);
-            //     }
-            // })
-
-/**
- * Version courte
- */
-            
+ *  Configurationau - début du fichier
+*/           
 const server = express();
 
 // Définir le path du dossir de views
@@ -43,9 +15,9 @@ server.set("views", path.join(__dirname, "views"));
 server.set("view engine", "mustache");
 server.engine("mustache", mustacheExpress());
 
-// Middleware 
-// Doit être entre la configuration et les routes / points d'accès
-// get tous les fichiers statiques dans le dossier public (donne accès à tout ce qui est dans le dossier public pour protéger le reste du projet)
+/**
+ *  Middleware 
+*/   
 server.use(express.static(path.join(__dirname, "public")));
 
 //Permet d'accepter des bodys en Json dans les requêtes
@@ -151,13 +123,13 @@ server.post('/donnees', async (req, res)=>
  * @method POST
  * Initialiser données depuis un fichier vers la base de données
  */
-server.post("/donnees/initialiser", (req, res)=>
+server.post("/films/initialiser", (req, res)=>
 {
-    const donnesTest = require("./data/donneesTest.js");
+    const donnesTest = require("./data/DonneesTest/filmsTest.js");
 
     donnesTest.forEach(async(element)=>
     {
-        await db.collection('test').add(element);
+        await db.collection('films').add(element);
     })
 
     res.statusCode = 200;
