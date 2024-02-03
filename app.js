@@ -27,8 +27,26 @@ server.use(express.json());
 
 
 /**
- * Points d'accès
+ * Points d'accès - Films
  */
+
+
+/**
+ * @method POST
+ * Initialiser données depuis un fichier vers la base de données
+ */
+server.post("/films/initialiser", (req, res)=>
+{
+    const donnesTest = require("./data/DonneesTest/filmsTest.js");
+
+    donnesTest.forEach(async(element)=>
+    {
+        await db.collection('films').add(element);
+    })
+
+    res.statusCode = 200;
+    res.json({message: "Données initialisées"})
+})
 
 /**
  * @method GET
@@ -95,23 +113,6 @@ server.get("/films/:id", async(req, res)=>
 
 /**
  * @method POST
- * Initialiser données depuis un fichier vers la base de données
- */
-server.post("/films/initialiser", (req, res)=>
-{
-    const donnesTest = require("./data/DonneesTest/filmsTest.js");
-
-    donnesTest.forEach(async(element)=>
-    {
-        await db.collection('films').add(element);
-    })
-
-    res.statusCode = 200;
-    res.json({message: "Données initialisées"})
-})
-
-/**
- * @method POST
  * Permet de créer un film
  */
 server.post('/films', async (req, res)=>
@@ -121,47 +122,66 @@ server.post('/films', async (req, res)=>
         const donneesFilm = req.body;
 
         // Validation des données
-        if(donneesFilm.titre == undefined)
+        if(donneesFilm.titre == undefined || donneesFilm.titre == '' )
         {
             res.statusCode = 400;
             return res.json({message: 'Vous devez fournir un titre.'});
         }
 
-        if(donneesFilm.genre == undefined)
+        if(donneesFilm.genre == undefined || donneesFilm.genre == '')
         {
             res.statusCode = 400;
             return res.json({message: 'Vous devez fournir une genre.'});
         }
 
-        if(donneesFilm.description == undefined)
+        if(donneesFilm.description == undefined || donneesFilm.description == '')
         {
             res.statusCode = 400;
             return res.json({message: 'Vous devez fournir une description.'});
         }
 
-        if(donneesFilm.titreVignette == undefined)
+        if(donneesFilm.titreVignette == undefined || donneesFilm.titreVignette == '')
         {
             res.statusCode = 400;
             return res.json({message: 'Vous devez fournir une image.'});
         }
 
-        if(donneesFilm.realisation == undefined)
+        if(donneesFilm.realisation == undefined || donneesFilm.realisation == '')
         {
             res.statusCode = 400;
             return res.json({message: 'Vous devez fournir un réalisateur / une réalisatrice.'});
         }
 
-        if(donneesFilm.annee == undefined)
+        if(donneesFilm.annee == undefined || donneesFilm.annee == '')
         {
             res.statusCode = 400;
             return res.json({message: 'Vous devez fournir une année.'});
         }
         
-        // Ajouter le fim à la base de données
-        await db.collection('films').add(donneesFilm);
+        const docs = await db.collection("films").where("titre", "==", donneesFilm.titre).get();
 
-        res.statusCode = 201;
-        res.json({message: 'la donnée a été ajoutée', donnees: donneesFilm});
+        // Valide si le film avec le même titre existe
+        const films = [];
+
+        docs.forEach((doc)=>
+        {
+            const film = doc.data();
+            films.push(film);
+        })
+
+        if(films.length >= 1)
+        {
+            res.statusCode = 400;
+            res.json({message: 'Le film existe déjà.'});
+        }
+        else
+        {
+            // Si tout est correct, ajouter le film à la base de données
+            await db.collection('films').add(donneesFilm);
+    
+            res.statusCode = 201;
+            res.json({message: 'la donnée a été ajoutée', donnees: donneesFilm});
+        }
     }
     catch(e)
     {
@@ -172,6 +192,7 @@ server.post('/films', async (req, res)=>
 
 /**
  * @method PUT
+ * @param id
  * Permet de modifier un film
  */
 server.put('/films/:id', async (req, res)=>
@@ -180,16 +201,16 @@ server.put('/films/:id', async (req, res)=>
    { 
         // Valide si le film existe
         const id = req.params.id;
+        const donneeModifiees = req.body;
         const doc = await db.collection('films').doc(id).get();
         const film = doc.data();
 
         if(film)
         {
-            const donneeModifiees = req.body;
-
             // Valide les données
-            let valide = true;
             const erreurs = []; 
+            let valide = true,
+                msg ='';
 
             Object.keys(donneeModifiees).forEach((cle)=>
             {
@@ -197,11 +218,8 @@ server.put('/films/:id', async (req, res)=>
                 if(!film[cle]) 
                 {
                     erreurs.push(cle);
-                    valide = false; 
-
-                    res.statusCode = 400;
-                    res.json({ message: "Les attributes saisies ne sont pas valides.", erreur: erreurs});
-
+                    valide = false;
+                    msg = "Les attributes saisies ne sont pas valides."
                 }
                 else
                 {
@@ -209,29 +227,30 @@ server.put('/films/:id', async (req, res)=>
                     if(donneeModifiees[cle] == '')
                     {
                         erreurs.push(cle);
-                        valide = false; 
-                        
-                        res.statusCode = 400;
-                        res.json({ message: "Toutes les attributes saisies doivent avoir une valeur.", erreur: erreurs});
+                        valide = false;
+                        msg = "Toutes les attributes saisies doivent avoir une valeur.";
                     }
                 }
             })
 
-            // Modifier le film
-            if(valide == true)
+            // Affiche msg si les données saisies sont invalides
+            if (valide == false) 
             {
-                await db.collection('films').doc(id).update(donneeModifiees);
-        
-                res.statusCode = 200;
-                res.json({message: "La donnée a été modifée.", donnees: donneeModifiees});
+                res.statusCode = 400;
+                return res.json({ message: msg, erreur: erreurs});
             }
         }
         else
         {
             // Retourne un message si le film n'existe pas
             res.statusCode = 404;
-            res.json({ message: "Film non trouvé. "});
+            return res.json({ message: "Film non trouvé. "});
         }
+
+        await db.collection('films').doc(id).update(donneeModifiees);
+
+        res.statusCode = 200;
+        res.json({message: "La donnée a été modifée.", donnees: donneeModifiees});
     }
     catch(e)
     {
@@ -242,6 +261,8 @@ server.put('/films/:id', async (req, res)=>
 
 /**
  * @method Delete
+ * @param id
+ * Permet de supprimer un film
  */
 server.delete('/films/:id', async (req, res)=>
 {
@@ -274,6 +295,151 @@ server.delete('/films/:id', async (req, res)=>
 })
 
 
+
+/**
+ * Points d'accès - Utilisateurs
+ */
+
+/**
+ * @method POST
+ * Initialiser données depuis un fichier vers la base de données
+ */
+server.post("/utilisateurs/initialiser", (req, res)=>
+{
+    const donnesTest = require("./data/DonneesTest/utilisateurTest.js");
+
+    donnesTest.forEach(async(element)=>
+    {
+        await db.collection('utilisateurs').add(element);
+    })
+
+    res.statusCode = 200;
+    res.json({message: "Données initialisées"})
+})
+
+/**
+ * @method POST
+ * Permet de s'inscrire
+ */
+server.post('/utilisateurs/inscription', async (req, res)=>
+{
+    try
+    {   
+        const donneesUtilisateur = req.body;
+
+        // Valide les informations
+        if(donneesUtilisateur.courriel == undefined || donneesUtilisateur.courriel == '')
+        {
+            res.statusCode = 400;
+            return res.json({message:"Vous devez fournir une adresse de courriel."});
+        }
+
+        if(donneesUtilisateur.mdp == undefined || donneesUtilisateur.mdp == '')
+        {
+            res.statusCode = 400;
+            return res.json({message:"Vous devez fournir un mot de passe."});
+        }
+
+        const docs = await db.collection("utilisateurs").where("courriel", "==", donneesUtilisateur.courriel).get();
+
+        // Valide si l'utilisateur existe
+        const utilisateurs = [];
+
+        docs.forEach((doc)=>
+        {
+            const utilisateur = doc.data();
+            utilisateurs.push(utilisateur);
+        })
+
+        if(utilisateurs.length >= 1)
+        {
+            res.statusCode = 400;
+            res.json({message: 'L\'utilisateur existe déjà.'});
+        }
+        else
+        {
+            // Crée l'utilisateur si tout est valide
+            res.statusCode = 200;
+            const doc = db.collection('utilisateurs').add(donneesUtilisateur);
+            res.json({message: 'L\'utilisateur ajouté.'});
+        }
+    }
+    catch(e)
+    {
+        res.statusCode = 500;
+        res.json({message : 'Une erreur est survenue.'});
+    }
+})
+
+
+/**
+ * @method POST
+ * Permet de se connecter
+ */
+server.post('/utilisateurs/connexion', async (req, res)=>
+{
+    try
+    {
+        const donneesUtilisateur = req.body;
+
+        // Valide si les informations sont saisies
+        if(donneesUtilisateur.courriel == undefined || donneesUtilisateur.courriel == '')
+        {
+            res.statusCode = 400;
+            return res.json({message:"Vous devez fournir une adresse de courriel."});
+        }
+
+        if(donneesUtilisateur.mdp == undefined || donneesUtilisateur.mdp == '')
+        {
+            res.statusCode = 400;
+            return res.json({message:"Vous devez fournir un mot de passe."});
+        }
+
+         const docs = await db.collection("utilisateurs").where("courriel", "==", donneesUtilisateur.courriel).get();
+
+        // Valide si l'utilisateur existe
+        const utilisateurs = [];
+
+        docs.forEach((doc)=>
+        {
+            const utilisateur = doc.data();
+            utilisateurs.push(utilisateur);
+        })
+
+        // Si'l existe
+        if(utilisateurs.length == 1)
+        {
+            // Valide si le mot de passe saisi est valide
+            if(utilisateurs[0].mdp == donneesUtilisateur.mdp )
+            {
+                res.statusCode = 200;
+                res.json({message: 'Vous êtes connecté.'});
+            }
+            else
+            {
+                res.statusCode = 400;
+                res.json({message: 'La combinaison de courriel et de mot de passe n\'est pas valide.'});
+            }
+
+        }
+        else if(utilisateurs.length == 0)
+        {
+            res.statusCode = 400;
+            res.json({message: 'La combinaison de courriel et de mot de passe n\'est pas valide.'});
+        }
+        else
+        {
+            res.statusCode = 500;
+            res.json({message : 'Une erreur est survenue.'});
+        }
+    }
+    catch(e)
+    {
+        res.statusCode = 500;
+        res.json({message : 'Une erreur est survenue.'});
+    }
+})
+
 /**
  * Gestion  page 404 - requête non trouvée - doit être le dernier
  */
@@ -282,6 +448,8 @@ server.use((req, res)=>
     res.statusCode = 404;
     res.render("404", {url: req.url});
 })
+
+
 
 /**
  * Message de confirmation lors du démarrage du serveur

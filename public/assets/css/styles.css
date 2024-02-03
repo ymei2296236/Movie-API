@@ -25,9 +25,7 @@
 :root {
 	--color-primary: #223654;
 	--color-secondary: #095797;
-	--color-accent: #e58271;
 	--color-gris: #c5cad2;
-	--color-error: #cb381f;
 }
 
 body {
@@ -50,6 +48,10 @@ nav {
 	padding: 2rem;
 	background-color: var(--color-primary);
 	color: white;
+}
+
+h2 {
+	margin-top: 2rem;
 }
 
 ul {
