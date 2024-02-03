@@ -1,3 +1,79 @@
+@font-face {
+	font-family: "Roboto";
+	src: url("/assets/fonts/Roboto/Roboto-Bold.ttf");
+	font-weight: bold;
+}
+
+@font-face {
+	font-family: "Roboto";
+	src: url("/assets/fonts/Roboto/Roboto-Regular.ttf");
+	font-weight: normal;
+}
+
+@font-face {
+	font-family: "OpenSans";
+	src: url("/assets/fonts/OpenSans/OpenSans-Regular.ttf");
+	font-weight: normal;
+}
+
+@font-face {
+	font-family: "OpenSans";
+	src: url("/assets/fonts/OpenSans/OpenSans-Bold.ttf");
+	font-weight: bold;
+}
+
+:root {
+	--color-primary: #223654;
+	--color-secondary: #095797;
+	--color-accent: #e58271;
+	--color-gris: #c5cad2;
+	--color-error: #cb381f;
+}
+
 body {
-    background-color: tomato;
+	font-family: "OpenSans";
+	font-size: 16px;
+	line-height: 1.5rem;
+	display: flex;
+	flex-direction: row;
+	flex-wrap: wrap;
+	color: var(--color-primary);
+}
+
+header {
+	flex: 100%;
+	background-color: var(--color-secondary);
+}
+
+nav {
+	flex: 1;
+	padding: 2rem;
+	background-color: var(--color-primary);
+	color: white;
+}
+
+ul {
+	display: flex;
+	flex-direction: column;
+	gap: 1.5rem;
+}
+
+li {
+	list-style: none;
+	font-family: "Roboto";
+	font-size: 1.2rem;
+	font-weight: normal;
+}
+
+main {
+	flex: 5;
+	flex-direction: column;
+}
+
+footer {
+	flex: 100%;
+	border-top: 1px solid var(--color-gris);
+	background-position: center;
+	background-size: 10rem;
+	height: 8rem;
 }
