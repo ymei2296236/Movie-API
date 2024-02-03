@@ -7,13 +7,15 @@ const { ServerResponse } = require("http");
 
 /**
  *  Configurationau - début du fichier
-*/           
+*/      
+dotenv.config();    
 const server = express();
 
 // Définir le path du dossir de views
 server.set("views", path.join(__dirname, "views"));
 server.set("view engine", "mustache");
 server.engine("mustache", mustacheExpress());
+
 
 /**
  *  Middleware 
@@ -23,22 +25,25 @@ server.use(express.static(path.join(__dirname, "public")));
 //Permet d'accepter des bodys en Json dans les requêtes
 server.use(express.json());
 
-// Points d'accès
+
+/**
+ * Points d'accès
+ */
+
+/**
+ * @method GET
+ * Permet d'accéder à tous les films
+ */
 server.get("/films", async (req, res)=>
 {
     try
-    {    // const test = {email: "test@gmail.com"}
-        console.log(req.query);
-
-        // Ceci sera remplacé par un fetch ou un appel à la base de données
-        // const donnees = require("./data/donneesTest");
-        const direction = req.query["order-direction"] || 'asc';
-        // Ne peut pas enchaîner une clé avec tiret, pas exemple : "req.query.order-direction"
+    {     
+        const ordre = req.query.ordre || 'asc';
+        // La signe plus convertit la valeur au nombre 
         const limit = +req.query.limit || 1000 ;
-        // La signe plus convertir à un nombre 
+        const tri = req.query.tri || "annee";
 
-        const donneesRef = await db.collection("films").orderBy("titre", direction).limit(limit).get();
-
+        const donneesRef = await db.collection("films").orderBy(tri, ordre).limit(limit).get();
         const donneesFinale = [];
 
         donneesRef.forEach((doc)=>
@@ -59,28 +64,26 @@ server.get("/films", async (req, res)=>
 /**
  * @method GET
  * @param id
- * Permet d'accéder à un utilisateur
+ * Permet d'accéder à un film
  */
 // : implique que c'est un paramètre, ce qui suive le : est la cle de l'array 'params'
-server.get("/donnees/:id", async(req, res)=>
+server.get("/films/:id", async(req, res)=>
 {
     try 
-    {    // console.log(req.params.id);
+    {   
         const id = req.params.id;
-        // const donnees = require("./data/donneesTest");
-        const doc = await db.collection('test').doc(id).get();
-        // find retourne l'element utilisateur
-        const utilisateur = doc.data();
+        const doc = await db.collection('films').doc(id).get();
+        const film = doc.data();
 
-        if(utilisateur)
+        if(film)
         {
             res.statusCode = 200;
-            res.json(utilisateur);
+            res.json(film);
         }
         else
         {
             res.statusCode = 404;
-            res.json({ message: "Utilisateur non trouvé. "});
+            res.json({ message: "Film non trouvé."});
         }
     }
     catch(e)
@@ -89,35 +92,6 @@ server.get("/donnees/:id", async(req, res)=>
         res.json({message : 'Une erreur est survenue.'})
     }
 });
-
-/**
- * @method POST
- */
-
-server.post('/donnees', async (req, res)=>
-{
-    try
-    {    
-        const test = req.body;
-
-        // Validation des données
-        if(test.user == undefined)
-        {
-            res.statusCode = 400;
-            return res.json({message: 'Vous devez fournir un utilisateur.'});
-        }
-
-        await db.collection('test').add(test);
-
-        res.statusCode = 201;
-        res.json({message: 'la donnée a été ajoutée', donnees: test});
-    }
-    catch(e)
-    {
-        res.statusCode = 500;
-        res.json({message : 'Une erreur est survenue.'});
-    }
-})
 
 /**
  * @method POST
@@ -137,21 +111,127 @@ server.post("/films/initialiser", (req, res)=>
 })
 
 /**
- * @method PUT
+ * @method POST
+ * Permet de créer un film
  */
-server.put('/donnees/:id', async (req, res)=>
+server.post('/films', async (req, res)=>
 {
-   try{ 
+    try
+    {    
+        const donneesFilm = req.body;
+
+        // Validation des données
+        if(donneesFilm.titre == undefined)
+        {
+            res.statusCode = 400;
+            return res.json({message: 'Vous devez fournir un titre.'});
+        }
+
+        if(donneesFilm.genre == undefined)
+        {
+            res.statusCode = 400;
+            return res.json({message: 'Vous devez fournir une genre.'});
+        }
+
+        if(donneesFilm.description == undefined)
+        {
+            res.statusCode = 400;
+            return res.json({message: 'Vous devez fournir une description.'});
+        }
+
+        if(donneesFilm.titreVignette == undefined)
+        {
+            res.statusCode = 400;
+            return res.json({message: 'Vous devez fournir une image.'});
+        }
+
+        if(donneesFilm.realisation == undefined)
+        {
+            res.statusCode = 400;
+            return res.json({message: 'Vous devez fournir un réalisateur / une réalisatrice.'});
+        }
+
+        if(donneesFilm.annee == undefined)
+        {
+            res.statusCode = 400;
+            return res.json({message: 'Vous devez fournir une année.'});
+        }
+        
+        // Ajouter le fim à la base de données
+        await db.collection('films').add(donneesFilm);
+
+        res.statusCode = 201;
+        res.json({message: 'la donnée a été ajoutée', donnees: donneesFilm});
+    }
+    catch(e)
+    {
+        res.statusCode = 500;
+        res.json({message : 'Une erreur est survenue.'});
+    }
+})
+
+/**
+ * @method PUT
+ * Permet de modifier un film
+ */
+server.put('/films/:id', async (req, res)=>
+{
+   try
+   { 
+        // Valide si le film existe
         const id = req.params.id;
-    console.log(id);
-        const donneeModifiees = req.body;
+        const doc = await db.collection('films').doc(id).get();
+        const film = doc.data();
 
-        //Validation ici
+        if(film)
+        {
+            const donneeModifiees = req.body;
 
-        await db.collection('test').doc(id).update(donneeModifiees);
+            // Valide les données
+            let valide = true;
+            const erreurs = []; 
 
-        res.statusCode = 200;
-        res.json({message: "La donnée a été modifée."});
+            Object.keys(donneeModifiees).forEach((cle)=>
+            {
+                // Valide si les attributes saisies existent à la base de données
+                if(!film[cle]) 
+                {
+                    erreurs.push(cle);
+                    valide = false; 
+
+                    res.statusCode = 400;
+                    res.json({ message: "Les attributes saisies ne sont pas valides.", erreur: erreurs});
+
+                }
+                else
+                {
+                    // Valide si les attributes ont une valeur 
+                    if(donneeModifiees[cle] == '')
+                    {
+                        erreurs.push(cle);
+                        valide = false; 
+                        
+                        res.statusCode = 400;
+                        res.json({ message: "Toutes les attributes saisies doivent avoir une valeur.", erreur: erreurs});
+                    }
+                }
+            })
+
+            // Modifier le film
+            if(valide == true)
+            {
+                await db.collection('films').doc(id).update(donneeModifiees);
+        
+                res.statusCode = 200;
+                res.json({message: "La donnée a été modifée.", donnees: donneeModifiees});
+            }
+        }
+        else
+        {
+            // Retourne un message si le film n'existe pas
+            res.statusCode = 404;
+            res.json({ message: "Film non trouvé. "});
+        }
     }
     catch(e)
     {
@@ -163,26 +243,27 @@ server.put('/donnees/:id', async (req, res)=>
 /**
  * @method Delete
  */
-server.delete('/donnees/:id', async (req, res)=>
+server.delete('/films/:id', async (req, res)=>
 {
     try{ 
+        // Valide si le film existe
         const id = req.params.id;
-        // const donnees = require("./data/donneesTest");
-        const doc = await db.collection('test').doc(id).get();
-        // find retourne l'element utilisateur
-        const utilisateur = doc.data();
+        const doc = await db.collection('films').doc(id).get();
+        const film = doc.data();
 
-        if(utilisateur)
+        if(film)
         {
-            const resultat = await db.collection('test').doc(id).delete();
+            // Supprime le film si'l existe
+            const resultat = await db.collection('films').doc(id).delete();
     
             res.statusCode = 200;
-            res.json({message: 'Le document a été supprimé.'})
+            res.json({message: 'Le film a été supprimé.'})
         }
         else
         {
+            // Retourne un message si'l n'existe pas
             res.statusCode = 404;
-            res.json({ message: "Utilisateur non trouvé. "});
+            res.json({ message: "Film non trouvé. "});
         }
     }
     catch(e)
@@ -193,17 +274,18 @@ server.delete('/donnees/:id', async (req, res)=>
 })
 
 
-// Doit être le dernier
-// Gestion page 404 - requête non trouvée
-
+/**
+ * Gestion  page 404 - requête non trouvée - doit être le dernier
+ */
 server.use((req, res)=>
 {
     res.statusCode = 404;
-
     res.render("404", {url: req.url});
 })
 
-// Message de confirmation lors du démarrage du serveur
+/**
+ * Message de confirmation lors du démarrage du serveur
+ */
 server.listen(process.env.PORT, ()=>
 {
     console.log("Le serveur a démarré.");
