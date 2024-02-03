@@ -24,7 +24,7 @@ server.use(express.static(path.join(__dirname, "public")));
 server.use(express.json());
 
 // Points d'accès
-server.get("/donnees", async (req, res)=>
+server.get("/films", async (req, res)=>
 {
     try
     {    // const test = {email: "test@gmail.com"}
@@ -37,7 +37,7 @@ server.get("/donnees", async (req, res)=>
         const limit = +req.query.limit || 1000 ;
         // La signe plus convertir à un nombre 
 
-        const donneesRef = await db.collection("test").orderBy("user", direction).limit(limit).get();
+        const donneesRef = await db.collection("films").orderBy("titre", direction).limit(limit).get();
 
         const donneesFinale = [];
 
