@@ -8,6 +8,7 @@ const path = require("path");
 const mustacheExpress = require("mustache-express");
 const db = require("./config/db.js");
 const { ServerResponse } = require("http");
+const { check, validationResult } = require("express-validator");
 
 // au début du fichier - configuration
 dotenv.config();
@@ -221,13 +222,121 @@ server.delete('/donnees/:id', async (req, res)=>
 })
 
 
+/**
+ * @method Post
+ */
+server.post('/utilisateurs/inscription', 
+[
+    check("courriel").escape().trim().notEmpty().isEmail().normalizeEmail(),
+    check("mdp").escape().trim().notEmpty().isLength({min:8, max:20}).isStrongPassword({minLength:8, minLowercase:1, minNumbers:1, minUppercase:1, minSymbols:1})
+], 
+async (req, res)=>
+{
+    const validation = validationResult(req);
+    if(validation.errors.length > 0)
+    {
+        res.statusCode = 400;
+        return res.json({ message: "Données non-conforms"})
+    }
+    // On récupère les infos du body
+
+    // version longe
+    // const courriel = req.body.courriel;
+    // const mdp = req.body.mdp;
+
+    // version courte
+    // if mdp is missing, firestore won`t accept undefined
+    const { courriel, mdp } = req.body;
+
+    // On vérifie si le courriel existe
+    const docRef = await db.collection('utilisateurs').where('courriel', '==', courriel).get();
+    const utilisateurs = [];
+
+    docRef.forEach(doc => 
+        {
+        utilisateurs.push(doc.data());
+    });
+
+    console.log(utilisateurs);
+    // Si oui, erreur
+    if(utilisateurs.length > 0)
+    {
+        res.statusCode = 400;
+        // sortir de la fonction pour que le code continue pas
+        return res.json({ message: "Le courriel existe déjà. "});
+    }
+
+    // TODO: On valide/nettoie la donnée
+    // TODO: On encrypte le mot de passe
+
+    // On enregistre
+
+    // version longe
+    // const nouvelUtilisateur = 
+    // {
+    //     "courriel": courriel, 
+    //     "mdp": mdp
+    // };
+
+    // version courte
+    const nouvelUtilisateur = {courriel, mdp};
+    await db.collection('utilisateurs').add(nouvelUtilisateur);
+
+    // On renvoie true;
+    delete nouvelUtilisateur.mdp;
+    res.statusCode = 200;
+    res.json(nouvelUtilisateur);
+})
+
+/**
+ * @method Post
+ */
+server.post('/utilisateurs/connexion', async (req, res)=>
+{
+    // On récupère les infos du body
+    const {courriel, mdp} = req.body;
+
+    // On vérifie si le courriel existe
+    const docRef = await db.collection('utilisateurs').where('courriel', '==', courriel).get();
+    const utilisateurs = [];
+
+    docRef.forEach(doc => {
+        utilisateurs.push(doc.data());
+    });
+
+    console.log(utilisateurs);
+
+    // Si non, erreur
+    if(utilisateurs.length != 1)
+    {
+        res.statusCode = 400;
+        return res.json({ message: "Erreur avec l'utilisateur"})
+    }
+
+    // TODO: On encrypte le mot de passe
+    // On compare
+    const utilisateurAValider = utilisateurs[0];
+    // Si pas pareil, erreur
+    if(utilisateurAValider.mdp != mdp)
+    {
+        res.statusCode = 400;
+        return res.json({ message: "La combinaison de courriel et mdp n'est pas valide. "})
+    }
+
+    // On retourne les infos de l'utilisateur sans le mot de passe
+    delete utilisateurAValider.mdp;
+
+    res.status = 200;
+    res.json(utilisateurAValider);
+
+})
+
 // Doit être le dernier
 // Gestion page 404 - requête non trouvée
 
 server.use((req, res)=>
 {
     res.statusCode = 404;
-
     res.render("404", {url: req.url});
 })
 
