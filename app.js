@@ -177,10 +177,10 @@ server.post('/films', async (req, res)=>
         else
         {
             // Si tout est correct, ajouter le film à la base de données
-            await db.collection('films').add(donneesFilm);
+            const film = await db.collection('films').add(donneesFilm);
     
             res.statusCode = 201;
-            res.json({message: 'la donnée a été ajoutée', donnees: donneesFilm});
+            res.json({message: `Le document avec l\'id ${film.id} a été ajouté`});
         }
     }
     catch(e)
