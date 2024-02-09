@@ -4,6 +4,7 @@ const path = require("path");
 const mustacheExpress = require("mustache-express");
 const db = require("./config/db.js");
 const { ServerResponse } = require("http");
+const { check, validationResult } = require("express-validator");
 
 /**
  *  Configurationau - début du fichier
@@ -321,26 +322,25 @@ server.post("/utilisateurs/initialiser", (req, res)=>
  * @method POST
  * Permet de s'inscrire
  */
-server.post('/utilisateurs/inscription', async (req, res)=>
+server.post('/utilisateurs/inscription', 
+[
+    check("courriel").escape().trim().notEmpty().isEmail().normalizeEmail(),
+    check("mdp").escape().trim().notEmpty().isLength({min:8, max:20}).isStrongPassword({minLength:8, minLowercase:1, minNumbers:1, minUppercase:1, minSymbols:1})
+],
+async (req, res)=>
 {
     try
     {   
-        const donneesUtilisateur = req.body;
-
-        // Valide les informations
-        if(donneesUtilisateur.courriel == undefined || donneesUtilisateur.courriel == '')
+        const validation = validationResult(req);
+        if(validation.errors.length > 0)
         {
             res.statusCode = 400;
-            return res.json({message:"Vous devez fournir une adresse de courriel."});
+            return res.json({message: "Données non-conforms"});
         }
 
-        if(donneesUtilisateur.mdp == undefined || donneesUtilisateur.mdp == '')
-        {
-            res.statusCode = 400;
-            return res.json({message:"Vous devez fournir un mot de passe."});
-        }
+        const { courriel, mdp } = req.body;
 
-        const docs = await db.collection("utilisateurs").where("courriel", "==", donneesUtilisateur.courriel).get();
+        const docs = await db.collection("utilisateurs").where("courriel", "==", courriel).get();
 
         // Valide si l'utilisateur existe
         const utilisateurs = [];
@@ -351,18 +351,19 @@ server.post('/utilisateurs/inscription', async (req, res)=>
             utilisateurs.push(utilisateur);
         })
 
-        if(utilisateurs.length >= 1)
+        if(utilisateurs.length > 0)
         {
             res.statusCode = 400;
-            res.json({message: 'L\'utilisateur existe déjà.'});
+            return res.json({message: 'L\'utilisateur existe déjà.'});
         }
-        else
-        {
-            // Crée l'utilisateur si tout est valide
-            res.statusCode = 200;
-            const doc = db.collection('utilisateurs').add(donneesUtilisateur);
-            res.json({message: 'L\'utilisateur ajouté.'});
-        }
+
+        // Crée l'utilisateur si tout est valide
+        const nouvelUtilisateur = { courriel, mdp };
+        res.statusCode = 200;
+        const doc = await db.collection('utilisateurs').add(nouvelUtilisateur);
+        // delete nouvelUtilisateur.mdp;
+        res.json({message: `L\'utilisateur ${doc.id} a été ajouté.`});
+
     }
     catch(e)
     {
@@ -376,26 +377,17 @@ server.post('/utilisateurs/inscription', async (req, res)=>
  * @method POST
  * Permet de se connecter
  */
-server.post('/utilisateurs/connexion', async (req, res)=>
+server.post('/utilisateurs/connexion', 
+[
+    check("courriel").escape().trim().notEmpty(),
+    check("mdp").escape().trim().notEmpty()
+],
+async (req, res)=>
 {
     try
     {
-        const donneesUtilisateur = req.body;
-
-        // Valide si les informations sont saisies
-        if(donneesUtilisateur.courriel == undefined || donneesUtilisateur.courriel == '')
-        {
-            res.statusCode = 400;
-            return res.json({message:"Vous devez fournir une adresse de courriel."});
-        }
-
-        if(donneesUtilisateur.mdp == undefined || donneesUtilisateur.mdp == '')
-        {
-            res.statusCode = 400;
-            return res.json({message:"Vous devez fournir un mot de passe."});
-        }
-
-         const docs = await db.collection("utilisateurs").where("courriel", "==", donneesUtilisateur.courriel).get();
+        const { courriel, mdp } = req.body;
+        const docs = await db.collection("utilisateurs").where("courriel", "==", courriel).get();
 
         // Valide si l'utilisateur existe
         const utilisateurs = [];
@@ -406,32 +398,25 @@ server.post('/utilisateurs/connexion', async (req, res)=>
             utilisateurs.push(utilisateur);
         })
 
-        // Si'l existe
-        if(utilisateurs.length == 1)
-        {
-            // Valide si le mot de passe saisi est valide
-            if(utilisateurs[0].mdp == donneesUtilisateur.mdp )
-            {
-                res.statusCode = 200;
-                res.json({message: 'Vous êtes connecté.'});
-            }
-            else
-            {
-                res.statusCode = 400;
-                res.json({message: 'La combinaison de courriel et de mot de passe n\'est pas valide.'});
-            }
-
-        }
-        else if(utilisateurs.length == 0)
+        if(utilisateurs.length != 1 )
         {
             res.statusCode = 400;
-            res.json({message: 'La combinaison de courriel et de mot de passe n\'est pas valide.'});
+            return res.json({message: 'La combinaison de courriel et de mot de passe n\'est pas valide.'});
         }
-        else
+        
+        // Si'l existe
+        const utilisateurAValider = utilisateurs[0];
+
+        // Valide si le mot de passe saisi est valide
+        if(utilisateurAValider.mdp != mdp )
         {
-            res.statusCode = 500;
-            res.json({message : 'Une erreur est survenue.'});
+            res.statusCode = 400;
+            return res.json({message: 'La combinaison de courriel et de mot de passe n\'est pas valide.'});
         }
+
+        res.statusCode = 200;
+        res.json({message: 'Vous êtes connecté.'});
+        
     }
     catch(e)
     {
