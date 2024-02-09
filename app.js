@@ -116,48 +116,52 @@ server.get("/films/:id", async(req, res)=>
  * @method POST
  * Permet de créer un film
  */
-server.post('/films', async (req, res)=>
+server.post('/films', 
+[
+    check("titre").escape().trim().notEmpty().
+],
+async (req, res)=>
 {
     try
     {    
-        const donneesFilm = req.body;
+        const { titre, genre, description, titreVignette, realisation, annee} = req.body;
 
         // Validation des données
-        if(donneesFilm.titre == undefined || donneesFilm.titre == '' )
-        {
-            res.statusCode = 400;
-            return res.json({message: 'Vous devez fournir un titre.'});
-        }
+        // if(donneesFilm.titre == undefined || donneesFilm.titre == '' )
+        // {
+        //     res.statusCode = 400;
+        //     return res.json({message: 'Vous devez fournir un titre.'});
+        // }
 
-        if(donneesFilm.genre == undefined || donneesFilm.genre == '')
-        {
-            res.statusCode = 400;
-            return res.json({message: 'Vous devez fournir une genre.'});
-        }
+        // if(donneesFilm.genre == undefined || donneesFilm.genre == '')
+        // {
+        //     res.statusCode = 400;
+        //     return res.json({message: 'Vous devez fournir une genre.'});
+        // }
 
-        if(donneesFilm.description == undefined || donneesFilm.description == '')
-        {
-            res.statusCode = 400;
-            return res.json({message: 'Vous devez fournir une description.'});
-        }
+        // if(donneesFilm.description == undefined || donneesFilm.description == '')
+        // {
+        //     res.statusCode = 400;
+        //     return res.json({message: 'Vous devez fournir une description.'});
+        // }
 
-        if(donneesFilm.titreVignette == undefined || donneesFilm.titreVignette == '')
-        {
-            res.statusCode = 400;
-            return res.json({message: 'Vous devez fournir une image.'});
-        }
+        // if(donneesFilm.titreVignette == undefined || donneesFilm.titreVignette == '')
+        // {
+        //     res.statusCode = 400;
+        //     return res.json({message: 'Vous devez fournir une image.'});
+        // }
 
-        if(donneesFilm.realisation == undefined || donneesFilm.realisation == '')
-        {
-            res.statusCode = 400;
-            return res.json({message: 'Vous devez fournir un réalisateur / une réalisatrice.'});
-        }
+        // if(donneesFilm.realisation == undefined || donneesFilm.realisation == '')
+        // {
+        //     res.statusCode = 400;
+        //     return res.json({message: 'Vous devez fournir un réalisateur / une réalisatrice.'});
+        // }
 
-        if(donneesFilm.annee == undefined || donneesFilm.annee == '')
-        {
-            res.statusCode = 400;
-            return res.json({message: 'Vous devez fournir une année.'});
-        }
+        // if(donneesFilm.annee == undefined || donneesFilm.annee == '')
+        // {
+        //     res.statusCode = 400;
+        //     return res.json({message: 'Vous devez fournir une année.'});
+        // }
         
         const docs = await db.collection("films").where("titre", "==", donneesFilm.titre).get();
 
