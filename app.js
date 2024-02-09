@@ -9,6 +9,7 @@ const mustacheExpress = require("mustache-express");
 const db = require("./config/db.js");
 const { ServerResponse } = require("http");
 const { check, validationResult } = require("express-validator");
+const bcrypt = require("bcrypt");
 
 // au début du fichier - configuration
 dotenv.config();
@@ -57,7 +58,12 @@ server.get("/donnees", async (req, res)=>
 {
     try
     {    // const test = {email: "test@gmail.com"}
-        console.log(req.query);
+        if(req.headers.authorization !== "patate" )
+        {
+            res.statusCode = 401;
+            return res.json ({message: "Non authorisé."})
+        }
+        console.log(req.headers.authorization);
 
         // Ceci sera remplacé par un fetch ou un appel à la base de données
         // const donnees = require("./data/donneesTest");
@@ -267,6 +273,8 @@ async (req, res)=>
     }
 
     // TODO: On valide/nettoie la donnée
+
+
     // TODO: On encrypte le mot de passe
 
     // On enregistre
@@ -278,8 +286,15 @@ async (req, res)=>
     //     "mdp": mdp
     // };
 
+    // On valide nettoie la donnée
+
+    // On encrypte le mot de passe
+    const hash = await bcrypt.hash(mdp, 10);
+    
     // version courte
-    const nouvelUtilisateur = {courriel, mdp};
+
+
+    const nouvelUtilisateur = {courriel, "mdp": hash};
     await db.collection('utilisateurs').add(nouvelUtilisateur);
 
     // On renvoie true;
@@ -316,8 +331,11 @@ server.post('/utilisateurs/connexion', async (req, res)=>
     // TODO: On encrypte le mot de passe
     // On compare
     const utilisateurAValider = utilisateurs[0];
+    const estValide = await bcrypt.compare(mdp, utilisateurAValider.mdp);
+
+
     // Si pas pareil, erreur
-    if(utilisateurAValider.mdp != mdp)
+    if(!estValide)
     {
         res.statusCode = 400;
         return res.json({ message: "La combinaison de courriel et mdp n'est pas valide. "})
