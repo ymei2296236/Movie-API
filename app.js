@@ -118,52 +118,28 @@ server.get("/films/:id", async(req, res)=>
  */
 server.post('/films', 
 [
-    check("titre").escape().trim().notEmpty().
+    check("titre").escape().trim().notEmpty().isString(),
+    check("genre").escape().trim().notEmpty().isString(),
+    check("description").escape().trim().notEmpty().isString(),
+    check("titreVignette").escape().trim().notEmpty().isString(),
+    check("realisation").escape().trim().notEmpty().isString(),
+    check("annee").escape().trim().notEmpty().isISO8601()
 ],
 async (req, res)=>
 {
     try
-    {    
+    {   
+        const validation = validationResult(req);
+
+        if(validation.errors.length > 0)
+        {
+            res.statusCode = 400;
+            return res.json ({message: "Données non-conforms."})
+        }
+        
         const { titre, genre, description, titreVignette, realisation, annee} = req.body;
 
-        // Validation des données
-        // if(donneesFilm.titre == undefined || donneesFilm.titre == '' )
-        // {
-        //     res.statusCode = 400;
-        //     return res.json({message: 'Vous devez fournir un titre.'});
-        // }
-
-        // if(donneesFilm.genre == undefined || donneesFilm.genre == '')
-        // {
-        //     res.statusCode = 400;
-        //     return res.json({message: 'Vous devez fournir une genre.'});
-        // }
-
-        // if(donneesFilm.description == undefined || donneesFilm.description == '')
-        // {
-        //     res.statusCode = 400;
-        //     return res.json({message: 'Vous devez fournir une description.'});
-        // }
-
-        // if(donneesFilm.titreVignette == undefined || donneesFilm.titreVignette == '')
-        // {
-        //     res.statusCode = 400;
-        //     return res.json({message: 'Vous devez fournir une image.'});
-        // }
-
-        // if(donneesFilm.realisation == undefined || donneesFilm.realisation == '')
-        // {
-        //     res.statusCode = 400;
-        //     return res.json({message: 'Vous devez fournir un réalisateur / une réalisatrice.'});
-        // }
-
-        // if(donneesFilm.annee == undefined || donneesFilm.annee == '')
-        // {
-        //     res.statusCode = 400;
-        //     return res.json({message: 'Vous devez fournir une année.'});
-        // }
-        
-        const docs = await db.collection("films").where("titre", "==", donneesFilm.titre).get();
+        const docs = await db.collection("films").where("titre", "==", titre).get();
 
         // Valide si le film avec le même titre existe
         const films = [];
@@ -177,16 +153,16 @@ async (req, res)=>
         if(films.length >= 1)
         {
             res.statusCode = 400;
-            res.json({message: 'Le film existe déjà.'});
+            return res.json({message: 'Le film existe déjà.'});
         }
-        else
-        {
-            // Si tout est correct, ajouter le film à la base de données
-            const film = await db.collection('films').add(donneesFilm);
-    
-            res.statusCode = 201;
-            res.json({message: `Le document avec l\'id ${film.id} a été ajouté`});
-        }
+
+        // Si tout est correct, ajouter le film à la base de données
+        const donneesFilm = { titre, genre, description, titreVignette, realisation, annee};
+        const film = await db.collection('films').add(donneesFilm);
+
+        res.statusCode = 201;
+        res.json({message: `Le film avec l\'id ${film.id} a été ajouté`});
+        
     }
     catch(e)
     {
@@ -200,52 +176,35 @@ async (req, res)=>
  * @param id
  * Permet de modifier un film
  */
-server.put('/films/:id', async (req, res)=>
+server.put('/films/:id', 
+[
+    check("titre").optional().escape().trim().notEmpty().isString(),
+    check("genre").optional().escape().trim().notEmpty().isString(),
+    check("description").optional().escape().trim().notEmpty().isString(),
+    check("titreVignette").optional().escape().trim().notEmpty().isString(),
+    check("realisation").optional().escape().trim().notEmpty().isString(),
+    check("annee").optional().escape().trim().notEmpty().isISO8601()
+],
+async (req, res)=>
 {
    try
    { 
+        const validation = validationResult(req);
+        
+        if(validation.errors.length > 0)
+        {
+            res.statusCode = 400;
+            return res.json({message: "Données non-conforms"});
+        }
+
+        
         // Valide si le film existe
         const id = req.params.id;
         const donneeModifiees = req.body;
         const doc = await db.collection('films').doc(id).get();
         const film = doc.data();
 
-        if(film)
-        {
-            // Valide les données
-            const erreurs = []; 
-            let valide = true,
-                msg ='';
-
-            Object.keys(donneeModifiees).forEach((cle)=>
-            {
-                // Valide si les attributes saisies existent à la base de données
-                if(!film[cle]) 
-                {
-                    erreurs.push(cle);
-                    valide = false;
-                    msg = "Les attributes saisies ne sont pas valides."
-                }
-                else
-                {
-                    // Valide si les attributes ont une valeur 
-                    if(donneeModifiees[cle] == '')
-                    {
-                        erreurs.push(cle);
-                        valide = false;
-                        msg = "Toutes les attributes saisies doivent avoir une valeur.";
-                    }
-                }
-            })
-
-            // Affiche msg si les données saisies sont invalides
-            if (valide == false) 
-            {
-                res.statusCode = 400;
-                return res.json({ message: msg, erreur: erreurs});
-            }
-        }
-        else
+        if(!film)
         {
             // Retourne un message si le film n'existe pas
             res.statusCode = 404;
