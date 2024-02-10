@@ -57,12 +57,12 @@ server.get("/films", async (req, res)=>
 {
     try
     {     
-        const ordre = req.query.ordre || 'asc';
         // La signe plus convertit la valeur au nombre 
-        const limit = +req.query.limit || 1000 ;
-        const tri = req.query.tri || "annee";
+        const limite = +req.query.limite || 1000 ;
+        const trierPar = req.query.trierPar || "annee";
+        const ordre = req.query.ordre || 'asc';
 
-        const donneesRef = await db.collection("films").orderBy(tri, ordre).limit(limit).get();
+        const donneesRef = await db.collection("films").limit(limite).orderBy(trierPar, ordre).get();
         const donneesFinale = [];
 
         donneesRef.forEach((doc)=>
@@ -119,7 +119,7 @@ server.get("/films/:id", async(req, res)=>
 server.post('/films', 
 [
     check("titre").escape().trim().notEmpty().isString(),
-    check("genre").escape().trim().notEmpty().isString(),
+    check("genres").escape().trim().notEmpty().isString(),
     check("description").escape().trim().notEmpty().isString(),
     check("titreVignette").escape().trim().notEmpty().isString(),
     check("realisation").escape().trim().notEmpty().isString(),
@@ -137,7 +137,7 @@ async (req, res)=>
             return res.json ({message: "Données non-conforms."})
         }
         
-        const { titre, genre, description, titreVignette, realisation, annee} = req.body;
+        const { titre, genres, description, titreVignette, realisation, annee} = req.body;
 
         const docs = await db.collection("films").where("titre", "==", titre).get();
 
@@ -157,7 +157,7 @@ async (req, res)=>
         }
 
         // Si tout est correct, ajouter le film à la base de données
-        const donneesFilm = { titre, genre, description, titreVignette, realisation, annee};
+        const donneesFilm = { titre, genres, description, titreVignette, realisation, annee};
         const film = await db.collection('films').add(donneesFilm);
 
         res.statusCode = 201;
@@ -179,7 +179,7 @@ async (req, res)=>
 server.put('/films/:id', 
 [
     check("titre").optional().escape().trim().notEmpty().isString(),
-    check("genre").optional().escape().trim().notEmpty().isString(),
+    check("genres").optional().escape().trim().notEmpty().isString(),
     check("description").optional().escape().trim().notEmpty().isString(),
     check("titreVignette").optional().escape().trim().notEmpty().isString(),
     check("realisation").optional().escape().trim().notEmpty().isString(),
@@ -196,7 +196,6 @@ async (req, res)=>
             res.statusCode = 400;
             return res.json({message: "Données non-conforms"});
         }
-
         
         // Valide si le film existe
         const id = req.params.id;

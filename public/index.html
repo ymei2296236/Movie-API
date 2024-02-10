@@ -4,35 +4,104 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="assets/css/styles.css">
-    <title>API Films</title>
+    <title>API Films - Mei Yang</title>
 </head>
 <body>
     <h1>API Films</h1>
     <section>
+        <h2>Documentation</h2>
+        <p>Cette API permet d'afficher, d'ajouter, de modifier et de supprimer des films de la base de données. Les routes sont accessibles à partir de l'url suivante : <a href="https://cadriel-front.onrender.com/films">https://cadriel-front.onrender.com/films</a></p>
+    </section>
+    <section>
         <h2>Routes publiques</h2>
         <div>
-            <h3>Films</h3>
-            <p><strong>GET /api/films</strong> : https://cadriel-front.onrender.com/films </p>
-            <p>Retourne la liste de tous les films. Vous pouvez trier les films par année, par titre et par réalisateur de façon ascendante ou descendante à l'aide de paramèetres dans l'URL. Par exemple : /api/films?tri=annee&ordre=asc</p>
-
-            <p><strong>GET /api/films/:id</strong> : https://cadriel-front.onrender.com/films/idFilm</p>
-            <p>Retourne le film ayant l'identifiant :id</p>
-
-            <p><strong>POST /api/films</strong> : https://cadriel-front.onrender.com/films </p>
-            <p>Ajoute un nouveau film à la liste de films. Le corps de la requête doit contenir les informations du film à ajouter. Le film doit être ajouté à la base de données et l'identifiant du film doit être retourné.</p>
-
-            <p><strong>PUT /api/films/:id</strong> : https://cadriel-front.onrender.com/films/idFilm </p>
-            <p>Modifier le film ayant l'identifiant :id. Le corps de la requête doit contenir les informations du films à modifier. Le film doit être modifié dans la base de données.</p>
-
-            <p><strong>DELETE /api/films/:id</strong> : https://cadriel-front.onrender.com/films/idFilm </p>
-            <p>Supprime le film ayant l'identifiant :id de la base de données.</p>
+            <h3>1. Récupérer la liste de tous les films</h3>
+            <p><strong>GET /api/films/</strong> : <a href="https://cadriel-front.onrender.com/films">https://cadriel-front.onrender.com/films</a></p>
+            <p>Retourne la liste de tous les films. Vous pouvez trier les films par année, par titre et par réalisateur de façon ascendante ou descendante à l'aide de paramèetres dans l'URL. Les paramètres possibles sont les suivants :</p>
+            <ul>tri
+                <li>annee (par défault)</li>
+                <li>titre</li>
+                <li>realisation</li>
+            </ul>
+            <ul>ordre
+                <li>asc (par défault)</li>
+                <li>desc</li>
+            </ul>
+            <ul>limite
+                <li>un nombre en entier</li>
+            </ul>
+            <p>Exemple : <a href="https://cadriel-front.onrender.com/films?trierPar=titre&ordre=desc&limite=5">https://cadriel-front.onrender.com/films?trierPar=titre&ordre=desc&limite=5</a></p>
         </div>
+
         <div>
-            <h3>Utilisateurs</h3>
-            <p><strong>POST /api/utilisateurs/inscription</strong> : </p>
-            <p>Ajoute un nouvel utilisateur à la liste des utilisateurs. Le corps de la requête doit contenir les informations de l'utilisateur à ajouter. Le mot de passe n'a pas besoin d'être encrypté avant d'être ajouté à la base de données. L'identifiant de l'utilisateur doit être retourné. Assurez-vous de ne pas créer deux utilisateurs aec le même courriel. Retournez un false avec un messge d'erreur dans ce cas précis.</p>
-            <p><strong>POST /api/utilisateurs/connexion</strong> : </p>
-            <p>Connecte un utilisateur. Le corps de la requête doit contenir les informations de l'utilisateur à connecter. Le mot de passe doit être comparé avec celui dans la base de données. Si le mot de passe est valide, votre API retournera true sinon elle retournera false avec un message d'erreur approprié.</p>
+            <h3>2. Récupérer un film spécifique</h3>
+            <p><strong>GET /api/films/:id</strong> : https://cadriel-front.onrender.com/films/{id}</p>
+            <p>Le paramètre requis : id (l'identifiant du film à récupérer).</p>
+            <p>Exemple : <a href="https://cadriel-front.onrender.com/films/5105ghJSiQgsN8SsUaCv">https://cadriel-front.onrender.com/films/5105ghJSiQgsN8SsUaCv</a></p>
+        </div>
+
+        <div>
+            <h3>3. Ajouter un nouveau film</h3>
+            <p><strong>POST /api/films/</strong> :<a href="https://cadriel-front.onrender.com/films">https://cadriel-front.onrender.com/films</a> </p>
+            <p>Ajoute un nouveau film à la liste de films. Paramètres requis : un objet film dans le corps de la requête. La réussite de la requête retourne l'id du film ajouté.</p>
+            <p>Exemple : 
+                const film = {
+                    titre: "Titre du film",
+                    description: "Description du film",
+                    annee: 2024,
+                    realisation: "Nom du réalisateur",
+                    genres: ["Genre 1", "Genre 2"],
+                    titreVignette: "Titre de la vignette.jpg"
+                }
+            </p>
+        </div>
+
+        <div>
+            <h3>4. Modifier un film</h3>
+            <p><strong>PUT /api/films/:id</strong> : https://cadriel-front.onrender.com/films/{id} </p>
+            <p>Modifier le film ayant l'identifiant :id. Les paramètres requis : l'id du film à modifier, un objet film dans le corpos de la requête.</p>
+            <p>Exemple : <a href="https://cadriel-front.onrender.com/films/gN0yc4PyLOsj8GA09tVr">https://cadriel-front.onrender.com/films/gN0yc4PyLOsj8GA09tVr</a></p>
+            <p>
+                const film = {
+                    titre: "Titre du film",
+                    description: "Description du film",
+                    annee: 2024,
+                    realisation: "Nom du réalisateur",
+                    genres: ["Genre 1", "Genre 2"],
+                    titreVignette: "Titre de la vignette.jpg"
+                }
+            </p>
+        </div>
+
+        <div>
+            <h3>5. Supprimer un film</h3>
+            <p><strong>DELETE /api/films/:id</strong> : https://cadriel-front.onrender.com/films/{id} </p>
+            <p>Le paramètre requis : id (l'identifiant du film à récupérer).</p>
+        </div>
+
+        <div>
+            <h3>6. S'inscrire au site</h3>
+            <p><strong>POST /api/utilisateurs/inscription</strong> : <a href="https://cadriel-front.onrender.com/utilisateurs/inscription">https://cadriel-front.onrender.com/utilisateurs/inscription</a></p> 
+            <p>Ajoute un nouvel utilisateur à la liste des utilisateurs. Paramètres requis : un objet utilisateur dans le corps de la requête. La réussite de la requête retourne l'id de l'utilisateur ajouté. </p>
+            <p>Exemple : 
+                const utilisateur = {
+                    courriel: "utilisateur@email.com",
+                    mdp: "motDePasse"
+                }
+            </p>
+
+        </div>
+
+        <div>
+            <h3>7. Se connecter à son compte</h3>
+            <p><strong>POST /api/utilisateurs/connexion</strong> : <a href="https://cadriel-front.onrender.com/utilisateurs/connexion">https://cadriel-front.onrender.com/utilisateurs/connexion</a></p> 
+            <p>Connecte un utilisateur. Paramètres requis :un objet utilisateur dans le corps de la requête. </p>
+            <p>Exemple : 
+                const utilisateur = {
+                    courriel: "utilisateur@email.com",
+                    mdp: "motDePasse"
+                }
+            </p>
         </div>
     </section>
 </body>
