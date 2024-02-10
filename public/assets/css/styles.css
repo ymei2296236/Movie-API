@@ -23,16 +23,9 @@ body {
 	color: var(--color-primary);
 }
 
-header {
-	flex: 100%;
-	background-color: var(--color-secondary);
-}
-
-nav {
-	flex: 1;
-	padding: 2rem;
-	background-color: var(--color-primary);
-	color: white;
+main {
+	flex: 5;
+	flex-direction: column;
 }
 
 h2 {
@@ -50,15 +43,8 @@ li {
 	font-weight: normal;
 }
 
-main {
-	flex: 5;
-	flex-direction: column;
-}
-
 footer {
-	flex: 100%;
 	border-top: 1px solid var(--color-gris);
-	background-position: center;
-	background-size: 10rem;
+	margin-top: 4rem;
 	height: 8rem;
 }
