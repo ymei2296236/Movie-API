@@ -3,7 +3,6 @@ const dotenv = require("dotenv");
 const path = require("path");
 const mustacheExpress = require("mustache-express");
 const db = require("./config/db.js");
-// const { ServerResponse } = require("http");
 const { check, validationResult } = require("express-validator");
 
 /**
@@ -110,7 +109,7 @@ server.post('/films',
 [
     // valider les données saisies
     check("titre").escape().trim().notEmpty().isString(),
-    check("genres").escape().trim().notEmpty().isString(),
+    check("genres").escape().trim().notEmpty().isArray(),
     check("description").escape().trim().notEmpty().isString(),
     check("titreVignette").escape().trim().notEmpty().isString(),
     check("realisation").escape().trim().notEmpty().isString(),
