@@ -171,7 +171,7 @@ server.put('/films/:id',
 [
     // valider les données saisies
     check("titre").optional().escape().trim().notEmpty().isString(),
-    check("genres").optional().escape().trim().notEmpty().isString(),
+    check("genres").optional().escape().trim().notEmpty().isArray(),
     check("description").optional().escape().trim().notEmpty().isString(),
     check("titreVignette").optional().escape().trim().notEmpty().isString(),
     check("realisation").optional().escape().trim().notEmpty().isString(),
