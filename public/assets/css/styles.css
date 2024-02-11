@@ -32,6 +32,10 @@ h2 {
 	font-family: "OpenSans";
 }
 
+h3 {
+	margin-top: 2rem;
+}
+
 ul {
 	display: flex;
 	flex-direction: column;
