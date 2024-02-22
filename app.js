@@ -4,12 +4,16 @@ const path = require("path");
 const mustacheExpress = require("mustache-express");
 const db = require("./config/db.js");
 const { check, validationResult } = require("express-validator");
+const cors = require("cors");
 
 /**
  *  Configurationau - début du fichier
 */      
-dotenv.config();    
+dotenv.config();   
+
 const server = express();
+
+server.use(cors());
 
 // Définir le path du dossir de views
 server.set("views", path.join(__dirname, "views"));
