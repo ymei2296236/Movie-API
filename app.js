@@ -59,7 +59,10 @@ server.get("/films", async (req, res)=>
 
         donneesRef.forEach((doc)=>
         {
-            donneesFinale.push(doc.data());
+            const filmsAjouter = doc.data();
+            filmsAjouter.id = doc.id;
+
+            donneesFinale.push(filmsAjouter);
         });
 
         res.statusCode = 200;
