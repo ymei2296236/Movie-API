@@ -5,6 +5,9 @@ const mustacheExpress = require("mustache-express");
 const db = require("./config/db.js");
 const { check, validationResult } = require("express-validator");
 const cors = require("cors");
+const bcrypt = require("bcrypt");
+const jwt = require('jsonwebtoken');
+
 
 /**
  *  Configurationau - début du fichier
@@ -12,8 +15,9 @@ const cors = require("cors");
 dotenv.config();   
 
 const server = express();
+const port = process.env.port || 5000;
 
-server.use(cors());
+
 
 // Définir le path du dossir de views
 server.set("views", path.join(__dirname, "views"));
@@ -26,8 +30,10 @@ server.engine("mustache", mustacheExpress());
 */   
 server.use(express.static(path.join(__dirname, "public")));
 
+server.use(cors());
 //Permet d'accepter des bodys en Json dans les requêtes
 server.use(express.json());
+server.use(express.urlencoded({ extended: true }));
 
 /**
  * Points d'accès - Films
@@ -290,9 +296,9 @@ async (req, res)=>
         const docs = await db.collection("utilisateurs").where("courriel", "==", courriel).get();
         const utilisateurs = [];
 
-        docs.forEach((doc)=>
+        docs.forEach(async (doc)=>
         {
-            const utilisateur = doc.data();
+            const utilisateur = { id: doc.id, ...doc.data()};
             utilisateurs.push(utilisateur);
         })
 
@@ -302,16 +308,22 @@ async (req, res)=>
             res.statusCode = 400;
             return res.json({message: 'L\'utilisateur existe déjà.'});
         }
+        else{
+            const hash = await bcrypt.hash(mdp, 10);
 
-        // Crée l'utilisateur si tout est valide
-        const nouvelUtilisateur = { courriel, mdp };
-        const doc = await db.collection('utilisateurs').add(nouvelUtilisateur);
+            // Crée l'utilisateur si tout est valide
+            const nouvelUtilisateur = { courriel, mdp: hash };
+            const doc = await db.collection('utilisateurs').add(nouvelUtilisateur);
+            
+            nouvelUtilisateur.id = doc.id;
+            res.statusCode = 200;
+            res.json(nouvelUtilisateur);
+        }
 
-        res.statusCode = 200;
-        res.json({message: `L\'utilisateur ${doc.id} a été ajouté.`});
     }
     catch(e)
     {
+        console.log(e);
         res.statusCode = 500;
         res.json({message : 'Une erreur est survenue.'});
     }
@@ -347,9 +359,9 @@ async (req, res)=>
         const docs = await db.collection("utilisateurs").where("courriel", "==", courriel).get();
         const utilisateurs = [];
 
-        docs.forEach((doc)=>
+        docs.forEach(async(doc)=>
         {
-            const utilisateur = doc.data();
+            const utilisateur = {id: doc.id, ...doc.data()};
             utilisateurs.push(utilisateur);
         })
 
@@ -364,14 +376,37 @@ async (req, res)=>
         const utilisateurAValider = utilisateurs[0];
 
         // Valide si le mot de passe saisi est valide
-        if(utilisateurAValider.mdp != mdp )
-        {
-            res.statusCode = 400;
-            return res.json({message: 'La combinaison de courriel et de mot de passe n\'est pas valide.'});
-        }
 
-        res.statusCode = 200;
-        res.json({message: 'Vous êtes connecté.'});
+            const resultatConnexion = await bcrypt.compare(mdp, utilisateurAValider.mdp);
+            delete utilisateurAValider.mdp;
+
+            if(resultatConnexion)
+            {
+                // générer un jeton
+                const donnesJeton = {
+                    // test: 'ok',
+                    courriel: utilisateurAValider.courriel,
+                    id: utilisateurAValider.id
+                };
+
+                const options ={
+                    expiresIn: "1d" // 1m, 1h 
+                }
+
+                const jeton = jwt.sign(
+                    donnesJeton,
+                    process.env.JWT_SECRET,
+                    options
+                );
+
+                res.statusCode = 200;
+                res.json(jeton);
+            }
+            else{
+
+                res.statusCode = 400;
+                return res.json({message: 'La combinaison de courriel et de mot de passe n\'est pas valide.'});
+            }
     }
     catch(e)
     {
