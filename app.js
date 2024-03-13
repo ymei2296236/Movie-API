@@ -1,28 +1,25 @@
 const express = require("express");
 const dotenv = require("dotenv");
 const path = require("path");
-const mustacheExpress = require("mustache-express");
-const db = require("./config/db.js");
-const { check, validationResult } = require("express-validator");
+// const mustacheExpress = require("mustache-express");
 const cors = require("cors");
-const bcrypt = require("bcrypt");
-const jwt = require('jsonwebtoken');
 
 
 /**
  *  Configurationau - début du fichier
 */      
+// ===== INITIALISATION VARIABLES D'ENVIRONNEMENT
 dotenv.config();   
 
 const server = express();
 const port = process.env.port || 5000;
 
+//TODO: Expliquer les erreurs CORS
+server.use(cors());
+//Permet d'accepter des bodys en Json dans les requêtes
+server.use(express.json());
+server.use(express.urlencoded({ extended: true }));
 
-
-// Définir le path du dossir de views
-server.set("views", path.join(__dirname, "views"));
-server.set("view engine", "mustache");
-server.engine("mustache", mustacheExpress());
 
 
 /**
@@ -30,426 +27,17 @@ server.engine("mustache", mustacheExpress());
 */   
 server.use(express.static(path.join(__dirname, "public")));
 
-server.use(cors());
-//Permet d'accepter des bodys en Json dans les requêtes
-server.use(express.json());
-server.use(express.urlencoded({ extended: true }));
-
-/**
- * Points d'accès - Films
- */
+// ===== ROUTES
+// Toutes les routes non statiques doivent être définies après les middlewares
+//TODO: Expliquer la division des routes
+server.use("/films", require("./routes/films.js"));
+server.use("/utilisateurs", require("./routes/utilisateurs.js"));
 
 
-/**
- * @method GET
- * Permet d'accéder à tous les films
- */
-server.get("/films", async (req, res)=>
-{
-    try
-    {     
-        // La signe plus convertit la valeur au nombre 
-        const limite = +req.query.limite || 1000 ;
-        const tri = req.query.tri || "annee";
-        const ordre = req.query.ordre || 'asc';
-
-        // Controle le champs de tri
-        if (tri != "annee" && tri != "titre" && tri != "realisation")
-        {
-            res.statusCode = 400;
-            return res.json({message: `Vous ne pouvez par trier les films par ${tri}.`})
-        }
-
-        const donneesRef = await db.collection("films").limit(limite).orderBy(tri, ordre).get();
-        const donneesFinale = [];
-
-        donneesRef.forEach((doc)=>
-        {
-            const filmsAjouter = doc.data();
-            filmsAjouter.id = doc.id;
-
-            donneesFinale.push(filmsAjouter);
-        });
-
-        res.statusCode = 200;
-        res.json(donneesFinale);
-    }
-    catch(e)
-    {
-        res.statusCode = 500;
-        res.json({message : 'Une erreur est survenue.'});
-    }
-})
-
-/**
- * @method GET
- * @param id
- * Permet d'accéder à un film
- */
-// : implique que c'est un paramètre, ce qui suive le : est la cle de l'array 'params'
-server.get("/films/:id", async(req, res)=>
-{
-    try 
-    {   
-        const id = req.params.id;
-        // valide si le film existe
-        const doc = await db.collection('films').doc(id).get();
-        const film = doc.data();
-
-        // retourne un message si'l n'existe pas
-        if(!film)
-        {
-            res.statusCode = 404;
-            return res.json({ message: "Film non trouvé."});
-        }
-
-        // retourne le film si'l existe
-        res.statusCode = 200;
-        res.json(film);
-    }
-    catch(e)
-    {
-        res.statusCode = 500;
-        res.json({message : 'Une erreur est survenue.'})
-    }
-});
-
-/**
- * @method POST
- * Permet de créer un film
- */
-server.post('/films', 
-[
-    // valider les données saisies
-    check("titre").escape().trim().notEmpty().isString(),
-    check("genres").escape().trim().notEmpty().isArray(),
-    check("description").escape().trim().notEmpty().isString(),
-    check("titreVignette").escape().trim().notEmpty().isString(),
-    check("realisation").escape().trim().notEmpty().isString(),
-    check("annee").escape().trim().notEmpty().isISO8601().isLength({max:4})
-],
-async (req, res)=>
-{
-    try
-    {   
-        const validation = validationResult(req);
-
-        // retourne un message lorsqu'une erreur de données
-        if(validation.errors.length > 0)
-        {
-            res.statusCode = 400;
-            return res.json ({message: "Données non-conforms."})
-        }
-        
-        const { titre, genres, description, titreVignette, realisation, annee} = req.body;
-
-        // Valide si le film avec le même titre existe
-        const docs = await db.collection("films").where("titre", "==", titre).get();
-
-        const films = [];
-
-        docs.forEach((doc)=>
-        {
-            const film = doc.data();
-            films.push(film);
-        })
-
-        // retourne un message si'l le film existe déjà
-        if(films.length >= 1)
-        {
-            res.statusCode = 400;
-            return res.json({message: 'Le film existe déjà.'});
-        }
-
-        // Si tout est correct, ajouter le film à la base de données
-        const donneesFilm = { titre, genres, description, titreVignette, realisation, annee};
-        const film = await db.collection('films').add(donneesFilm);
-
-        res.statusCode = 201;
-        res.json({message: `Le film avec l\'id ${film.id} a été ajouté`});
-    }
-    catch(e)
-    {
-        res.statusCode = 500;
-        res.json({message : 'Une erreur est survenue.'});
-    }
-})
-
-/**
- * @method PUT
- * @param id
- * Permet de modifier un film
- */
-server.put('/films/:id', 
-[
-    // valider les données saisies
-    check("titre").optional().escape().trim().notEmpty().isString(),
-    check("genres").optional().escape().trim().notEmpty().isArray(),
-    check("description").optional().escape().trim().notEmpty().isString(),
-    check("titreVignette").optional().escape().trim().notEmpty().isString(),
-    check("realisation").optional().escape().trim().notEmpty().isString(),
-    check("annee").optional().escape().trim().notEmpty().isISO8601().isLength({max:4})
-],
-async (req, res)=>
-{
-   try
-   { 
-        const validation = validationResult(req);
-        
-        // retourne un message lorsqu'une erreur de données
-        if(validation.errors.length > 0)
-        {
-            res.statusCode = 400;
-            return res.json({message: "Données non-conforms"});
-        }
-        
-        // Valide si le film existe
-        const id = req.params.id;
-        const donneeModifiees = req.body;
-        const doc = await db.collection('films').doc(id).get();
-        const film = doc.data();
-
-        // Retourne un message si le film n'existe pas
-        if(!film)
-        {
-            res.statusCode = 404;
-            return res.json({ message: "Film non trouvé. "});
-        }
-
-        // Effectue la modification à la base de données
-        await db.collection('films').doc(id).update(donneeModifiees);
-
-        res.statusCode = 200;
-        res.json({message: `Le film avec l\'id ${id} a été modifié`, donnees: donneeModifiees});
-    }
-    catch(e)
-    {
-        res.statusCode = 500;
-        res.json({message : 'Une erreur est survenue.'});
-    }
-})
-
-/**
- * @method Delete
- * @param id
- * Permet de supprimer un film
- */
-server.delete('/films/:id', async (req, res)=>
-{
-    try{ 
-        // Valide si le film existe
-        const id = req.params.id;
-        const doc = await db.collection('films').doc(id).get();
-        const film = doc.data();
-
-        // Retourne un message si'l n'existe pas
-        if(!film)
-        {
-            res.statusCode = 404;
-            return res.json({ message: "Film non trouvé. "});
-        }
-
-        // Supprime le film de la base de données si'l existe
-        const resultat = await db.collection('films').doc(id).delete();
-
-        res.statusCode = 200;
-        res.json({message: 'Le film a été supprimé.'})
-    }
-    catch(e)
-    {
-        res.statusCode = 500;
-        res.json({message : 'Une erreur est survenue.'});
-    }
-})
-
-
-/**
- * Points d'accès - Utilisateurs
- */
-
-/**
- * @method POST
- * Permet de s'inscrire
- */
-server.post('/utilisateurs/inscription', 
-[
-    // Valide les données saisies
-    check("courriel").escape().trim().notEmpty().isEmail().normalizeEmail(),
-    check("mdp").escape().trim().notEmpty().isLength({min:8, max:20}).isStrongPassword({minLength:8, minLowercase:1, minNumbers:1, minUppercase:1, minSymbols:1})
-],
-async (req, res)=>
-{
-    try
-    {   
-        const validation = validationResult(req);
-        
-        // retourne un message lorsqu'une erreur de données 
-        if(validation.errors.length > 0)
-        {
-            res.statusCode = 400;
-            return res.json({message: "Données non-conforms"});
-        }
-
-        const { courriel, mdp } = req.body;
-
-        // Valide si l'utilisateur existe
-        const docs = await db.collection("utilisateurs").where("courriel", "==", courriel).get();
-        const utilisateurs = [];
-
-        docs.forEach(async (doc)=>
-        {
-            const utilisateur = { id: doc.id, ...doc.data()};
-            utilisateurs.push(utilisateur);
-        })
-
-        // Retourne un message si'l existe déjà
-        if(utilisateurs.length > 0)
-        {
-            res.statusCode = 400;
-            return res.json({message: 'L\'utilisateur existe déjà.'});
-        }
-        else{
-            const hash = await bcrypt.hash(mdp, 10);
-
-            // Crée l'utilisateur si tout est valide
-            const nouvelUtilisateur = { courriel, mdp: hash };
-            const doc = await db.collection('utilisateurs').add(nouvelUtilisateur);
-            
-            nouvelUtilisateur.id = doc.id;
-            res.statusCode = 200;
-            res.json(nouvelUtilisateur);
-        }
-
-    }
-    catch(e)
-    {
-        console.log(e);
-        res.statusCode = 500;
-        res.json({message : 'Une erreur est survenue.'});
-    }
-})
-
-
-/**
- * @method POST
- * Permet de se connecter
- */
-server.post('/utilisateurs/connexion', 
-[
-    // Valide les données saisies
-    check("courriel").escape().trim().notEmpty(),
-    check("mdp").escape().trim().notEmpty()
-],
-async (req, res)=>
-{
-    try
-    {
-        const validation = validationResult(req);
-        
-        // retourne un message lorsqu'une erreur de données 
-        if(validation.errors.length > 0)
-        {
-            res.statusCode = 400;
-            return res.json({message: "Données non-conforms"});
-        }
-
-        const { courriel, mdp } = req.body;
-        
-        // Valide si l'utilisateur existe
-        const docs = await db.collection("utilisateurs").where("courriel", "==", courriel).get();
-        const utilisateurs = [];
-
-        docs.forEach(async(doc)=>
-        {
-            const utilisateur = {id: doc.id, ...doc.data()};
-            utilisateurs.push(utilisateur);
-        })
-
-        // Retourne un message si'l n'existe pas
-        if(utilisateurs.length != 1 )
-        {
-            res.statusCode = 400;
-            return res.json({message: 'La combinaison de courriel et de mot de passe n\'est pas valide.'});
-        }
-        
-        // Si'l existe
-        const utilisateurAValider = utilisateurs[0];
-
-        // Valide si le mot de passe saisi est valide
-
-            const resultatConnexion = await bcrypt.compare(mdp, utilisateurAValider.mdp);
-            delete utilisateurAValider.mdp;
-
-            if(resultatConnexion)
-            {
-                // générer un jeton
-                const donnesJeton = {
-                    // test: 'ok',
-                    courriel: utilisateurAValider.courriel,
-                    id: utilisateurAValider.id
-                };
-
-                const options ={
-                    expiresIn: "1d" // 1m, 1h 
-                }
-
-                const jeton = jwt.sign(
-                    donnesJeton,
-                    process.env.JWT_SECRET,
-                    options
-                );
-
-                res.statusCode = 200;
-                res.json(jeton);
-            }
-            else{
-
-                res.statusCode = 400;
-                return res.json({message: 'La combinaison de courriel et de mot de passe n\'est pas valide.'});
-            }
-    }
-    catch(e)
-    {
-        res.statusCode = 500;
-        res.json({message : 'Une erreur est survenue.'});
-    }
-})
-
-
-/**
- * @method POST
- * Initialiser données depuis un fichier vers la base de données
- */
-server.post("/films/initialiser", async (req, res)=>
-{
-    const donnesTest = require("./data/DonneesTest/filmsTest.js");
-
-    donnesTest.forEach(async(element)=>
-    {
-        await db.collection('films').add(element);
-    })
-
-    res.statusCode = 200;
-    res.json({message: "Données initialisées"})
-})
-
-
-/**
- * @method POST
- * Initialiser données depuis un fichier vers la base de données
- */
-server.post("/utilisateurs/initialiser", async(req, res)=>
-{
-    const donnesTest = require("./data/DonneesTest/utilisateurTest.js");
-
-    donnesTest.forEach(async(element)=>
-    {
-        await db.collection('utilisateurs').add(element);
-    })
-
-    res.statusCode = 200;
-    res.json({message: "Données initialisées"})
-})
+// Définir le path du dossir de views
+// server.set("views", path.join(__dirname, "views"));
+// server.set("view engine", "mustache");
+// server.engine("mustache", mustacheExpress());
 
 
 /**
@@ -457,6 +45,7 @@ server.post("/utilisateurs/initialiser", async(req, res)=>
  */
 server.use((req, res)=>
 {
+    res.setHeader("Content-Type", "application/json");
     res.statusCode = 404;
     res.render("404", {url: req.url});
 })
@@ -466,7 +55,7 @@ server.use((req, res)=>
 /**
  * Message de confirmation lors du démarrage du serveur
  */
-server.listen(process.env.PORT, ()=>
+server.listen(port, ()=>
 {
-    console.log("Le serveur a démarré.");
+    console.log(`Le serveur a démarré au port ${port}.`);
 });
