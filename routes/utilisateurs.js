@@ -133,7 +133,7 @@ async (req, res)=>
                 };
 
                 const options ={
-                    expiresIn: "1d" // 1m, 1h 
+                    expiresIn: "30m" // 1m, 1h 
                 }
 
                 const jeton = jwt.sign(

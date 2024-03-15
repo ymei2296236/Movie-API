@@ -15,9 +15,8 @@ const server = express();
 const port = process.env.port || 5000;
 
 //TODO: Expliquer les erreurs CORS
-server.use(cors());
-//Permet d'accepter des bodys en Json dans les requêtes
-server.use(express.json());
+server.use(cors()); // peut specifier l'adresse de notre site comme la seule site permet au accèss
+server.use(express.json()); //Permet d'accepter des bodys en Json dans les requêtes
 server.use(express.urlencoded({ extended: true }));
 
 
