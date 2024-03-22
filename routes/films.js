@@ -87,7 +87,7 @@ server.get("/:id", async(req, res)=>
  * @method POST
  * Permet de créer un film
  */
-server.post('/', 
+server.post('/', auth,
 [
     // valider les données saisies
     check("titre").escape().trim().notEmpty().isString(),
@@ -149,7 +149,7 @@ async (req, res)=>
  * @param id
  * Permet de modifier un film
  */
-server.put('/:id', 
+server.put('/:id', auth,
 [
     // valider les données saisies
     check("titre").optional().escape().trim().notEmpty().isString(),
