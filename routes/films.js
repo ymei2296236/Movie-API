@@ -47,6 +47,7 @@ server.get("/", async (req, res)=>
     {
         res.statusCode = 500;
         res.json({message : 'Une erreur est survenue.'});
+        console.log(e);
     }
 })
 
@@ -90,24 +91,26 @@ server.get("/:id", async(req, res)=>
 server.post('/', auth,
 [
     // valider les données saisies
-    check("titre").escape().trim().notEmpty().isString(),
-    check("genres").escape().trim().notEmpty().isArray(),
-    check("description").escape().trim().notEmpty().isString(),
-    check("titreVignette").escape().trim().notEmpty().isString(),
-    check("realisation").escape().trim().notEmpty().isString(),
-    check("annee").escape().trim().notEmpty().isISO8601().isLength({max:4})
+    check("titre").escape().trim().notEmpty().withMessage('Il faut entrer le titre.').isString(),
+    check("genres").escape().trim().notEmpty().isArray({min:1}).withMessage('Il faut choisir au moin une genre.'),
+    check("description").escape().trim().notEmpty().withMessage('Il faut entrer une description.').isString(),
+    check("titreVignette").escape().notEmpty().withMessage('Il faut choisir une image à téléverser.').isString(),
+    check("realisation").escape().trim().notEmpty().withMessage('Il faut entrer le nom du réalisateur.').isString(),
+    check("annee").escape().trim().notEmpty().withMessage('Il faut entrer une année.').bail().isISO8601().withMessage('Il faut entrer une année valide.').bail().isLength({max:4}).withMessage('L\'année est de 4 chiffres au maximum.'),
 ],
 async (req, res)=>
 {
     try
     {   
         const validation = validationResult(req);
+        const erreurs = validation.formatWith(erreur => erreur.msg);
 
         // retourne un message lorsqu'une erreur de données
-        if(validation.errors.length > 0)
+        if(!validation.isEmpty())
         {
             res.statusCode = 400;
-            return res.json ({message: "Données non-conforms."})
+
+            return res.json ({erreurs: validation.formatWith(erreur => erreur).array(), message: "Données non-conforms. Veuillez modifier les champs soulignés. "});
         }
         
         const { titre, genres, description, titreVignette, realisation, annee} = req.body;
@@ -140,6 +143,7 @@ async (req, res)=>
     catch(e)
     {
         res.statusCode = 500;
+        console.log(e);
         res.json({message : 'Une erreur est survenue.'});
     }
 })
@@ -153,23 +157,24 @@ server.put('/:id', auth,
 [
     // valider les données saisies
     check("titre").optional().escape().trim().notEmpty().isString(),
-    check("genres").optional().escape().trim().notEmpty().isArray(),
+    check("genres").optional().escape().trim().notEmpty().isArray({min:1}).withMessage('Il faut choisir au moin une genre.'),
     check("description").optional().escape().trim().notEmpty().isString(),
     check("titreVignette").optional().escape().trim().notEmpty().isString(),
     check("realisation").optional().escape().trim().notEmpty().isString(),
-    check("annee").optional().escape().trim().notEmpty().isISO8601().isLength({max:4})
+    check("annee").optional().escape().trim().notEmpty().isISO8601().withMessage('Il faut entrer une année valide.').bail().isLength({max:4}).withMessage('L\'année est de 4 chiffres au maximum.'),
 ],
 async (req, res)=>
 {
    try
    { 
         const validation = validationResult(req);
-        
+        const erreurs = validation.formatWith(erreur => erreur.msg);
+
         // retourne un message lorsqu'une erreur de données
         if(validation.errors.length > 0)
         {
             res.statusCode = 400;
-            return res.json({message: "Données non-conforms"});
+            return res.json ({erreurs: validation.formatWith(erreur => erreur).array(), message: "Données non-conforms. Veuillez modifier les champs soulignés. "});
         }
         
         // Valide si le film existe
@@ -236,9 +241,9 @@ server.delete('/:id', auth, async (req, res)=>
  * @method POST
  * Initialiser données depuis un fichier vers la base de données
  */
-server.post("/initialiser", async (req, res)=>
+server.post("/initialiser", auth, async (req, res)=>
 {
-    const donnesTest = require("./data/DonneesTest/filmsTest.js");
+    const donnesTest = require("../data/DonneesTest/filmsTest.js");
 
     donnesTest.forEach(async(element)=>
     {

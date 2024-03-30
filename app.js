@@ -12,7 +12,7 @@ const cors = require("cors");
 dotenv.config();   
 
 const server = express();
-const port = process.env.port || 5000;
+const port = process.env.PORT || 5000;
 
 //TODO: Expliquer les erreurs CORS
 server.use(cors()); // peut specifier l'adresse de notre site comme la seule site permet au accèss
@@ -28,7 +28,6 @@ server.use(express.static(path.join(__dirname, "public")));
 
 // ===== ROUTES
 // Toutes les routes non statiques doivent être définies après les middlewares
-//TODO: Expliquer la division des routes
 server.use("/films", require("./routes/films.js"));
 server.use("/utilisateurs", require("./routes/utilisateurs.js"));
 
