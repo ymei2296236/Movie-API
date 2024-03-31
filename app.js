@@ -20,7 +20,6 @@ server.use(express.json()); //Permet d'accepter des bodys en Json dans les requ√
 server.use(express.urlencoded({ extended: true }));
 
 
-
 /**
  *  Middleware 
 */   
