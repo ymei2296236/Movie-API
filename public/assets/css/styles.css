@@ -1,3 +1,52 @@
+@font-face {
+	font-family: "OpenSans";
+	src: url("/assets/fonts/OpenSans/OpenSans-Regular.ttf");
+	font-weight: normal;
+}
+
+@font-face {
+	font-family: "OpenSans";
+	src: url("/assets/fonts/OpenSans/OpenSans-Bold.ttf");
+	font-weight: bold;
+}
+
+:root {
+	--color-primary: #223654;
+	--color-secondary: #095797;
+	--color-gris: #c5cad2;
+}
+
 body {
-    background-color: tomato;
+	font-family: "OpenSans";
+	font-size: 16px;
+	line-height: 1.5rem;
+	color: var(--color-primary);
+}
+
+main {
+	margin: 2rem 5rem;
+}
+
+h2 {
+	margin-top: 2rem;
+	font-family: "OpenSans";
+}
+
+h3 {
+	margin-top: 2rem;
+}
+
+ul {
+	display: flex;
+	flex-direction: column;
+}
+
+li {
+	font-size: 1rem;
+	font-weight: normal;
+}
+
+footer {
+	border-top: 1px solid var(--color-gris);
+	margin-top: 4rem;
 }
