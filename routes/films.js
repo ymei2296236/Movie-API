@@ -204,6 +204,93 @@ async (req, res)=>
 })
 
 /**
+ * @method PUT
+ * @param id
+ * Permet de voter un film
+ */
+server.put('/:id/vote', 
+    [
+        // valider les données saisies
+        check("notes").notEmpty().isInt(),
+    ],
+    async (req, res)=>
+    {
+       try
+       { 
+            const validation = validationResult(req);
+            const erreurs = validation.formatWith(erreur => erreur.msg);
+    
+            // retourne un message lorsqu'une erreur de données
+            if(validation.errors.length > 0)
+            {
+                res.statusCode = 400;
+                return res.json ({erreurs: validation.formatWith(erreur => erreur).array(), message: "Données non-conforms. Veuillez modifier les champs soulignés. "});
+            }
+            
+            // Valide si le film existe
+            const id = req.params.id;
+            const donneeModifiees = req.body;
+            const doc = await db.collection('films').doc(id).get();
+            const film = doc.data();
+    
+            // Retourne un message si le film n'existe pas
+            if(!film)
+            {
+                res.statusCode = 404;
+                return res.json({ message: "Film non trouvé. "});
+            }
+    
+            // Effectue la modification à la base de données
+            await db.collection('films').doc(id).update(donneeModifiees);
+    
+            res.statusCode = 200;
+            res.json({message: `Le film avec l\'id ${id} a été modifié`, donnees: donneeModifiees});
+        }
+        catch(e)
+        {
+            res.statusCode = 500;
+            res.json({message : 'Une erreur est survenue.'});
+        }
+    })
+    
+/**
+ * @method PUT
+ * @param id
+ * Permet de commenter un film
+ */
+server.put('/:id/commentaire', 
+    async (req, res)=>
+    {
+       try
+       {                 
+            // Valide si le film existe
+            const id = req.params.id;
+            const donneeModifiees = req.body;
+            const doc = await db.collection('films').doc(id).get();
+            const film = doc.data();
+    
+            // Retourne un message si le film n'existe pas
+            if(!film)
+            {
+                res.statusCode = 404;
+                return res.json({ message: "Film non trouvé. "});
+            }
+    
+            // Effectue la modification à la base de données
+            await db.collection('films').doc(id).update(donneeModifiees);
+    
+            res.statusCode = 200;
+            res.json({message: `Le film avec l\'id ${id} a été modifié`, donnees: donneeModifiees});
+        }
+        catch(e)
+        {
+            res.statusCode = 500;
+            res.json({message : 'Une erreur est survenue.'});
+        }
+    })
+    
+
+/**
  * @method Delete
  * @param id
  * Permet de supprimer un film
@@ -255,3 +342,4 @@ server.post("/initialiser", auth, async (req, res)=>
 })
 
 module.exports = server;
+

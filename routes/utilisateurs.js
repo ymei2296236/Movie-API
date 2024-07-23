@@ -18,7 +18,8 @@ server.post('/inscription',
 [
     // Valide les données saisies
     check("courriel").escape().trim().notEmpty().isEmail().normalizeEmail(),
-    check("mdp").escape().trim().notEmpty().isLength({min:8, max:20}).isStrongPassword({minLength:8, minLowercase:1, minNumbers:1, minUppercase:1, minSymbols:1})
+    check("mdp").escape().trim().notEmpty().isLength({min:8, max:20}).isStrongPassword({minLength:8, minLowercase:1, minNumbers:1, minUppercase:1, minSymbols:1}),
+    check('privilege').notEmpty().isNumeric()
 ],
 async (req, res)=>
 {
@@ -33,7 +34,7 @@ async (req, res)=>
             return res.json({message: "Données non-conforms"});
         }
 
-        const { courriel, mdp } = req.body;
+        const { courriel, mdp, privilege } = req.body;
 
         // Valide si l'utilisateur existe
         const docs = await db.collection("utilisateurs").where("courriel", "==", courriel).get();
@@ -55,7 +56,7 @@ async (req, res)=>
             const hash = await bcrypt.hash(mdp, 10);
 
             // Crée l'utilisateur si tout est valide
-            const nouvelUtilisateur = { courriel, mdp: hash };
+            const nouvelUtilisateur = { courriel, mdp: hash, privilege };
             const doc = await db.collection('utilisateurs').add(nouvelUtilisateur);
             
             nouvelUtilisateur.id = doc.id;
@@ -123,8 +124,18 @@ async (req, res)=>
             const resultatConnexion = await bcrypt.compare(mdp, utilisateurAValider.mdp);
             delete utilisateurAValider.mdp;
 
+            
             if(resultatConnexion)
             {
+                // récupère les infos de l'usager
+                let roleUser;
+
+                if(utilisateurAValider.privilege == '1') roleUser = 'admin';
+                else roleUser = 'user';
+
+                const courrielUser = utilisateurAValider.courriel;
+
+
                 // générer un jeton
                 const donnesJeton = {
                     // test: 'ok',
@@ -142,8 +153,11 @@ async (req, res)=>
                     options
                 );
 
+
+                const infoUsager = { jeton, role: roleUser, courriel: courrielUser};
+
                 res.statusCode = 200;
-                res.json(jeton);
+                res.json(infoUsager);
             }
             else{
 
